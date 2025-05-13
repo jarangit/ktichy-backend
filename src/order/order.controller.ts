@@ -22,8 +22,8 @@ export class OrderController {
   }
 
   @Get()
-  findAll() {
-    return this.orderService.findAll();
+  findAll(@Body('createdAtSort') createdAtSort?: 'ASC' | 'DESC') {
+    return this.orderService.findAll(createdAtSort);
   }
 
   @Patch(':id')

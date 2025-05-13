@@ -23,9 +23,9 @@ export class OrderService {
     return savedOrder;
   }
 
-  async findAll() {
+  async findAll(createdAtSort: 'ASC' | 'DESC' = 'DESC') {
     return this.orderRepository.find({
-      order: { createdAt: 'DESC' },
+      order: { createdAt: createdAtSort },
     });
   }
 
