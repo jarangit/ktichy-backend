@@ -10,32 +10,47 @@ export class OrderService {
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-    private readonly orderGateway: OrderGateway, // inject
+    private readonly orderGateway: OrderGateway,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     const order = this.orderRepository.create(createOrderDto);
     const savedOrder = await this.orderRepository.save(order);
+
     // 🔔 Broadcast to client
     this.orderGateway.notifyNewOrder(savedOrder);
+
     return savedOrder;
   }
 
-  findAll() {
-    return this.orderRepository.find();
+  async findAll() {
+    return this.orderRepository.find({
+      order: { createdAt: 'DESC' },
+    });
   }
+
   async update(id: number, data: Partial<Order>) {
     const order = await this.orderRepository.findOneBy({ id });
-    if (!order) throw new NotFoundException(`Order ID ${id} not found`);
+
+    if (!order) {
+      throw new NotFoundException(`Order ID ${id} not found`);
+    }
 
     Object.assign(order, data);
     const updated = await this.orderRepository.save(order);
-    this.orderGateway.notifyOrderUpdated(updated); // 🔔 แจ้งผ่าน WebSocket
+
+    // 🔔 แจ้งผ่าน WebSocket
+    this.orderGateway.notifyOrderUpdated(updated);
+
     return updated;
   }
+
   async remove(id: number) {
     const order = await this.orderRepository.findOneBy({ id });
-    if (!order) throw new NotFoundException(`Order ID ${id} not found`);
+
+    if (!order) {
+      throw new NotFoundException(`Order ID ${id} not found`);
+    }
 
     await this.orderRepository.remove(order);
 
