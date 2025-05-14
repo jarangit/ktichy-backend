@@ -23,9 +23,22 @@ export class OrderService {
     return savedOrder;
   }
 
-  async findAll(createdAtSort: 'ASC' | 'DESC' = 'ASC') {
+  findAll(filters: {
+    status?: 'PENDING' | 'COMPLETE';
+    type?: 'TOGO' | 'DINEIN';
+    createdAtSort?: 'ASC' | 'DESC';
+  }) {
+    const { status, type, createdAtSort = 'ASC' } = filters;
+
+    const where: any = {};
+    if (status) where.status = status;
+    if (type) where.type = type;
+
     return this.orderRepository.find({
-      order: { createdAt: createdAtSort },
+      where,
+      order: {
+        createdAt: createdAtSort,
+      },
     });
   }
 
@@ -37,6 +50,22 @@ export class OrderService {
     }
 
     Object.assign(order, data);
+    const updated = await this.orderRepository.save(order);
+
+    // 🔔 แจ้งผ่าน WebSocket
+    this.orderGateway.notifyOrderUpdated(updated);
+
+    return updated;
+  }
+
+  async updateStatus(id: number, status: Order['status']) {
+    const order = await this.orderRepository.findOneBy({ id });
+
+    if (!order) {
+      throw new NotFoundException(`Order ID ${id} not found`);
+    }
+
+    order.status = status;
     const updated = await this.orderRepository.save(order);
 
     // 🔔 แจ้งผ่าน WebSocket
@@ -58,5 +87,34 @@ export class OrderService {
     this.orderGateway.notifyOrderDeleted(id);
 
     return { success: true, id };
+  }
+  async clearByType(type: Order['type']) {
+    const orders = await this.orderRepository.findBy({ type });
+
+    if (orders.length === 0) {
+      throw new NotFoundException(`No orders found for type ${type}`);
+    }
+
+    await this.orderRepository.remove(orders);
+
+    // 🔔 แจ้งผ่าน WebSocket
+    // this.orderGateway.notifyOrdersCleared(type);
+
+    return { success: true, type };
+  }
+
+  async clearAll() {
+    const orders = await this.orderRepository.find();
+
+    if (orders.length === 0) {
+      throw new NotFoundException(`No orders found`);
+    }
+
+    await this.orderRepository.remove(orders);
+
+    // 🔔 แจ้งผ่าน WebSocket
+    // this.orderGateway.notifyOrdersCleared(type);
+
+    return { success: true, type: 'ALL' };
   }
 }

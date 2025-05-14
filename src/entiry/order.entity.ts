@@ -13,8 +13,7 @@ export enum OrderType {
 
 export enum OrderStatus {
   PENDING = 'PENDING',
-  PREPARING = 'PREPARING',
-  READY = 'READY',
+  COMPLETE = 'COMPLETE',
 }
 
 @Entity()
