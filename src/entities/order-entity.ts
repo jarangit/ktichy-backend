@@ -37,8 +37,14 @@ export class Order {
   })
   status: OrderStatus;
 
+  @Column({ default: false })
+  isArchived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archivedAt?: Date;
+
   @Column({ nullable: true })
-  tableNumber?: string;
+  waitingOrderNumber?: string;
 
   @Column({ default: false })
   isWaitingInStore: boolean;

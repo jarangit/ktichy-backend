@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Order } from 'src/entiry/order.entity';
 import { Repository } from 'typeorm';
-import { CreateOrderDto } from './dto/create-order.dot';
+import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderGateway } from './order.gateway';
+import { Order } from 'entities/order-entity';
 
 @Injectable()
 export class OrderService {
@@ -27,13 +27,18 @@ export class OrderService {
     status?: 'PENDING' | 'COMPLETE';
     type?: 'TOGO' | 'DINEIN';
     createdAtSort?: 'ASC' | 'DESC';
+    includeArchived?: boolean;
   }) {
-    const { status, type, createdAtSort = 'ASC' } = filters;
-
+    const {
+      status,
+      type,
+      createdAtSort = 'ASC',
+      includeArchived = false,
+    } = filters;
     const where: any = {};
     if (status) where.status = status;
     if (type) where.type = type;
-
+    if (!includeArchived) where.isArchived = false;
     return this.orderRepository.find({
       where,
       order: {
@@ -104,16 +109,19 @@ export class OrderService {
   }
 
   async clearAll() {
-    const orders = await this.orderRepository.find();
+    const orders = await this.orderRepository.find({
+      where: { isArchived: false },
+    });
 
     if (orders.length === 0) {
       throw new NotFoundException(`No orders found`);
     }
 
-    await this.orderRepository.remove(orders);
-
-    // 🔔 แจ้งผ่าน WebSocket
-    // this.orderGateway.notifyOrdersCleared(type);
+    for (const order of orders) {
+      order.isArchived = true;
+      order.archivedAt = new Date();
+    }
+    await this.orderRepository.save(orders);
 
     return { success: true, type: 'ALL' };
   }

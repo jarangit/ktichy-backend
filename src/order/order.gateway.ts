@@ -1,6 +1,6 @@
+import { Order } from 'entities/order-entity';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { Order } from 'src/entiry/order.entity';
 
 @WebSocketGateway({
   cors: {
