@@ -1,30 +1,15 @@
 version: '3.8'
-
 services:
   mysql:
-    image: mysql:8
-    restart: always
+    image: mysql:8.0 # เลือกเวอร์ชันที่ต้องการ
+    container_name: kds_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: kds_db
+      MYSQL_ROOT_PASSWORD: password # กำหนดรหัสผ่าน root
+      MYSQL_DATABASE: kds_db # กำหนดชื่อฐานข้อมูล
+      MYSQL_USER: kds_user # กำหนดชื่อผู้ใช้
+      MYSQL_PASSWORD: password # กำหนดรหัสผ่านของผู้ใช้
     ports:
-      - "3306:3306"
-    healthcheck:  # ✅ เช็กว่า MySQL พร้อมก่อนให้ app ขึ้น
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      - '3366:3306' # แมปพอร์ต 3306 ของ local กับ container
 
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=root
-      - DB_PASS=password
-      - DB_NAME=kds_db
-    depends_on:
-      mysql:
-        condition: service_healthy
+volumes:
+  mysql_data:

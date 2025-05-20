@@ -37,6 +37,12 @@ export class Order {
   })
   status: OrderStatus;
 
+  @Column({ nullable: true })
+  tableNumber?: string;
+
+  @Column({ default: false })
+  isWaitingInStore: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
