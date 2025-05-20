@@ -1,4 +1,4 @@
-import { Order } from 'entities/order-entity';
+import { Order } from 'entities/order.entity';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
