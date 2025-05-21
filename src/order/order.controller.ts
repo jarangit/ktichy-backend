@@ -9,9 +9,9 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CreateOrderDto } from './dto/create-order.dot';
+import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderService } from './order.service';
-import { Order } from 'src/entiry/order.entity';
+import { Order } from 'entities/order.entity';
 
 @Controller('orders')
 export class OrderController {
@@ -27,8 +27,14 @@ export class OrderController {
     @Query('status') status?: 'PENDING' | 'COMPLETE',
     @Query('type') type?: 'TOGO' | 'DINEIN',
     @Query('createdAtSort') createdAtSort?: 'ASC' | 'DESC',
+    @Query('includeArchived') includeArchived?: boolean,
   ) {
-    return this.orderService.findAll({ status, type, createdAtSort });
+    return this.orderService.findAll({
+      status,
+      type,
+      createdAtSort,
+      includeArchived,
+    });
   }
 
   @Patch(':id')
@@ -44,5 +50,10 @@ export class OrderController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.orderService.remove(id);
+  }
+
+  @Get('report-monitor')
+  reportMonitor() {
+    return this.orderService.getOrderReport();
   }
 }

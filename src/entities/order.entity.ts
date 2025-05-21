@@ -37,6 +37,15 @@ export class Order {
   })
   status: OrderStatus;
 
+  @Column({ default: false })
+  isArchived: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  archivedAt?: Date;
+
+  @Column({ default: false })
+  isWaitingInStore: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

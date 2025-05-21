@@ -2,14 +2,21 @@ version: '3.8'
 
 services:
   mysql:
-    image: mysql:8
+    image: mysql:8.0
+    container_name: kds_mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: kds_db
+      MYSQL_USER: kds_user
+      MYSQL_PASSWORD: password
+      # plugin และ bind-address มีให้แค่ถ้าจำเป็น
+      # command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
     ports:
-      - "3306:3306"
-    healthcheck:  # ✅ เช็กว่า MySQL พร้อมก่อนให้ app ขึ้น
+      - "3366:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 3s
@@ -22,9 +29,12 @@ services:
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=root
+      - DB_USER=kds_user
       - DB_PASS=password
       - DB_NAME=kds_db
     depends_on:
       mysql:
         condition: service_healthy
+
+volumes:
+  mysql_data:

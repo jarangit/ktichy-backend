@@ -1,13 +1,13 @@
 import { IsEnum, IsNotEmpty } from 'class-validator';
-import { OrderType } from 'src/entiry/order.entity';
-export enum OrderStatus {
-  PENDING = 'PENDING',
-  COMPLETE = 'COMPLETE',
-}
+import { OrderStatus, OrderType } from 'entities/order.entity';
+
 export class CreateOrderDto {
   @IsNotEmpty()
   orderNumber: string;
 
   @IsEnum(OrderType)
   type: OrderType;
+
+  @IsEnum(OrderStatus)
+  status?: OrderStatus;
 }
