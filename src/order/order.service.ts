@@ -127,7 +127,10 @@ export class OrderService {
   }
 
   async getOrderReport() {
-    const orders = await this.orderRepository.find();
+    // ดึงเฉพาะ order ที่ยังไม่ archived
+    const orders = await this.orderRepository.find({
+      where: { isArchived: false },
+    });
 
     const total = orders.length;
 
@@ -194,7 +197,7 @@ export class OrderService {
         max: maxMinutes,
         avg: avgMinutes,
       },
-      topDineInTables: topTables, // เพิ่มตรงนี้
+      topDineInTables: topTables,
     };
   }
 }
