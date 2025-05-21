@@ -51,4 +51,9 @@ export class OrderController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.orderService.remove(id);
   }
+
+  @Get('report-monitor')
+  reportMonitor() {
+    return this.orderService.getOrderReport();
+  }
 }

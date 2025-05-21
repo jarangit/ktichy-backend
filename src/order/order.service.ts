@@ -125,4 +125,76 @@ export class OrderService {
 
     return { success: true, type: 'ALL' };
   }
+
+  async getOrderReport() {
+    const orders = await this.orderRepository.find();
+
+    const total = orders.length;
+
+    const totalByType = orders.reduce(
+      (acc, order) => {
+        acc[order.type] = (acc[order.type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const totalByStatus = orders.reduce(
+      (acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const waitingInStore = orders.filter((o) => o.isWaitingInStore).length;
+    const archived = orders.filter((o) => o.isArchived).length;
+
+    // === คำนวณเวลาตั้งแต่ createdAt ถึงปัจจุบัน (หน่วย: นาที) ===
+    const now = new Date().getTime();
+    const minutesArray = orders
+      .filter((o) => o.createdAt)
+      .map((o) => Math.floor((now - new Date(o.createdAt).getTime()) / 60000));
+
+    let minMinutes = null;
+    let maxMinutes = null;
+    let avgMinutes = null;
+
+    if (minutesArray.length > 0) {
+      minMinutes = Math.min(...minutesArray);
+      maxMinutes = Math.max(...minutesArray);
+      avgMinutes =
+        Math.round(
+          (minutesArray.reduce((sum, v) => sum + v, 0) / minutesArray.length) *
+            100,
+        ) / 100;
+    }
+
+    // === หา top 3 โต๊ะที่ถูกใช้บ่อยที่สุด (เฉพาะ DINEIN) ===
+    const dineInOrders = orders.filter(
+      (o) => o.type === 'DINEIN' && o.orderNumber,
+    );
+    const tableCount: Record<string, number> = {};
+    dineInOrders.forEach((o) => {
+      tableCount[o.orderNumber] = (tableCount[o.orderNumber] || 0) + 1;
+    });
+    const topTables = Object.entries(tableCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([orderNumber, count]) => ({ orderNumber, count }));
+
+    return {
+      total,
+      totalByType,
+      totalByStatus,
+      waitingInStore,
+      archived,
+      orderTimeMinutes: {
+        min: minMinutes,
+        max: maxMinutes,
+        avg: avgMinutes,
+      },
+      topDineInTables: topTables, // เพิ่มตรงนี้
+    };
+  }
 }
