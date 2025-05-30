@@ -54,6 +54,8 @@ export class OrderController {
 
   @Get('report-monitor')
   reportMonitor() {
+    // TODO: create a report for the monitor for only to day and all time
+    // TODO: how to auto create data last 3 days 
     return this.orderService.getOrderReport();
   }
 }
