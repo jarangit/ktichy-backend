@@ -11,7 +11,7 @@ export class OrderService {
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
     private readonly orderGateway: OrderGateway,
-  ) {}
+  ) { }
 
   async create(createOrderDto: CreateOrderDto) {
     const order = this.orderRepository.create(createOrderDto);
@@ -49,9 +49,19 @@ export class OrderService {
 
   async update(id: number, data: Partial<Order>) {
     const order = await this.orderRepository.findOneBy({ id });
+    const today = new Date();
 
     if (!order) {
       throw new NotFoundException(`Order ID ${id} not found`);
+    }
+    // เช็คว่ามีการแก้ไข orderNumber และเปลี่ยนจริง
+    if (
+      data.orderNumber &&
+      data.orderNumber !== order.orderNumber &&
+      order.createdAt &&
+      (Date.now() - new Date(order.createdAt).getTime()) > 2 * 60 * 1000 // 2 นาที
+    ) {
+      order.previousOrderNumber = order.orderNumber;
     }
 
     Object.assign(order, data);
@@ -169,7 +179,7 @@ export class OrderService {
       avgMinutes =
         Math.round(
           (minutesArray.reduce((sum, v) => sum + v, 0) / minutesArray.length) *
-            100,
+          100,
         ) / 100;
     }
 

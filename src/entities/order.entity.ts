@@ -23,6 +23,9 @@ export class Order {
 
   @Column()
   orderNumber: string;
+  
+  @Column({ nullable: true })
+  previousOrderNumber?: string;
 
   @Column({
     type: 'enum',
