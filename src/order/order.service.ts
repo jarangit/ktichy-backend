@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderGateway } from './order.gateway';
 import { Order } from 'entities/order.entity';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class OrderService {
@@ -103,6 +104,7 @@ export class OrderService {
 
     return { success: true, id };
   }
+
   async clearByType(type: Order['type']) {
     const orders = await this.orderRepository.findBy({ type });
 
@@ -209,5 +211,22 @@ export class OrderService {
       },
       topDineInTables: topTables,
     };
+  }
+
+  @Cron('0 0 * * *')
+  async clearOldOrders() {
+    const today = new Date();
+    today.setDate(today.getDate() - 3)
+
+    const result = await this.orderRepository.delete({
+      isArchived: true,
+      archivedAt: LessThan(today),
+    })
+
+    if (result.affected > 0) {
+      console.log(`Cleared ${result.affected} old archived orders`);
+    } else {
+      console.log('No old archived orders to clear');
+    }
   }
 }
