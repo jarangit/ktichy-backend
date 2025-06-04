@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -12,16 +17,24 @@ export class OrderService {
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
     private readonly orderGateway: OrderGateway,
-  ) { }
+  ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const order = this.orderRepository.create(createOrderDto);
-    const savedOrder = await this.orderRepository.save(order);
+    try {
+      if (!createOrderDto.orderNumber) {
+        throw new BadRequestException('กรุณาใส่เลข order number');
+      }
+      const order = this.orderRepository.create(createOrderDto);
+      const savedOrder = await this.orderRepository.save(order);
 
-    // 🔔 Broadcast to client
-    this.orderGateway.notifyNewOrder(savedOrder);
+      // 🔔 Broadcast to client
+      this.orderGateway.notifyNewOrder(savedOrder);
 
-    return savedOrder;
+      return savedOrder;
+    } catch (error) {
+      // 💥 กรณี save ไม่สำเร็จ เช่น database ล่ม หรือข้อมูลไม่ถูกต้อง
+      throw new InternalServerErrorException('ไม่สามารถสร้างคำสั่งซื้อได้');
+    }
   }
 
   findAll(filters: {
@@ -60,7 +73,7 @@ export class OrderService {
       data.orderNumber &&
       data.orderNumber !== order.orderNumber &&
       order.createdAt &&
-      (Date.now() - new Date(order.createdAt).getTime()) > 2 * 60 * 1000 // 2 นาที
+      Date.now() - new Date(order.createdAt).getTime() > 2 * 60 * 1000 // 2 นาที
     ) {
       order.previousOrderNumber = order.orderNumber;
     }
@@ -181,7 +194,7 @@ export class OrderService {
       avgMinutes =
         Math.round(
           (minutesArray.reduce((sum, v) => sum + v, 0) / minutesArray.length) *
-          100,
+            100,
         ) / 100;
     }
 
@@ -216,12 +229,12 @@ export class OrderService {
   @Cron('0 0 * * *')
   async clearOldOrders() {
     const today = new Date();
-    today.setDate(today.getDate() - 3)
+    today.setDate(today.getDate() - 3);
 
     const result = await this.orderRepository.delete({
       isArchived: true,
       archivedAt: LessThan(today),
-    })
+    });
 
     if (result.affected > 0) {
       console.log(`Cleared ${result.affected} old archived orders`);
