@@ -1,5 +1,5 @@
 # Step 1: Build NestJS App
-FROM node:18-alpine as builder
+FROM node:22-alpine as builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # Step 2: Production Image
-FROM node:18-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
