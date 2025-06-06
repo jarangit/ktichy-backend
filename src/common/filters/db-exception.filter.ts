@@ -6,11 +6,13 @@ import {
 } from '@nestjs/common';
 import { SentryExceptionCaptured } from '@sentry/nestjs';
 import { Response, Request } from 'express';
+import * as Sentry from '@sentry/node';
 
 @Catch()
 export class DatabaseExceptionFilter implements ExceptionFilter {
   @SentryExceptionCaptured()
   catch(exception: any, host: ArgumentsHost) {
+    Sentry.captureException(exception);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
