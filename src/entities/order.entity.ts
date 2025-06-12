@@ -1,10 +1,15 @@
+// src/orders/order.entity.ts
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
 } from 'typeorm';
+import { OrderItem } from './order-item.entity';
+import { Restaurant } from './restaurant.entity';
 
 export enum OrderType {
   TOGO = 'TOGO',
@@ -21,33 +26,24 @@ export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @ManyToOne(() => Restaurant, (restaurant) => restaurant.orders)
+  restaurant: Restaurant;
+
   @Column()
   orderNumber: string;
-  
-  @Column({ nullable: true })
-  previousOrderNumber?: string;
 
   @Column({
     type: 'enum',
-    enum: OrderType,
+    enum: ['NEW', 'PREPARING', 'READY'],
+    default: 'NEW',
   })
-  type: OrderType;
-
-  @Column({
-    type: 'enum',
-    enum: OrderStatus,
-    default: OrderStatus.PENDING,
-  })
-  status: OrderStatus;
+  status: 'NEW' | 'PREPARING' | 'READY';
 
   @Column({ default: false })
   isArchived: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
-  archivedAt?: Date;
-
-  @Column({ default: false })
-  isWaitingInStore: boolean;
+  @OneToMany(() => OrderItem, (item) => item.order)
+  items: OrderItem[];
 
   @CreateDateColumn()
   createdAt: Date;
