@@ -5,6 +5,10 @@ import { OrderModule } from './order/order.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SentryModule } from '@sentry/nestjs/setup';
+import { UsersModule } from './users/users.module';
+import { RestaurantsModule } from './restaurants/restaurants.module';
+import { StationsModule } from './stations/stations.module';
+import { MenusModule } from './menus/menus.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -20,6 +24,10 @@ import { SentryModule } from '@sentry/nestjs/setup';
     OrderModule,
     ScheduleModule.forRoot(),
     SentryModule.forRoot(),
+    UsersModule,
+    RestaurantsModule,
+    StationsModule,
+    MenusModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 
@@ -14,8 +15,14 @@ export class Station {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.stations)
+  @ManyToOne(() => Restaurant, (restaurant) => restaurant.stations, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'restaurant_id' })
   restaurant: Restaurant;
+
+  @Column()
+  restaurant_id: number;
 
   @Column()
   name: string;

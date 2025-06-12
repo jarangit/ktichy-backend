@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Station } from './station.entity';
@@ -20,8 +21,12 @@ export class Restaurant {
   @Column()
   name: string;
 
-  @ManyToOne(() => User, (user) => user.restaurants)
+  @ManyToOne(() => User, (user) => user.restaurants, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'owner_id' })
   owner: User;
+
+  @Column()
+  owner_id: number;
 
   @OneToMany(() => Station, (station) => station.restaurant)
   stations: Station[];
