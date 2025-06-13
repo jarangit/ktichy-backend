@@ -17,12 +17,7 @@ export class MenusController {
 
   @Post()
   create(@Body() createMenuDto: CreateMenuDto) {
-    const { restaurantId, ...menuData } = createMenuDto;
-    const data = {
-      ...menuData,
-      restaurant: { id: restaurantId },
-    };
-    return this.menusService.create(data);
+    return this.menusService.create(createMenuDto);
   }
 
   @Get()

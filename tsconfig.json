@@ -3,7 +3,7 @@
     "baseUrl": "src",
 
     "paths": {
-      "@entity/*": ["entity/*"]
+      "@entities/*": ["entities/*"]
     },
 
     "module": "commonjs",

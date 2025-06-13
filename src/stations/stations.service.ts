@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
-import { Station } from 'entities/station.entity';
+import { Station } from '../entities/station.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 

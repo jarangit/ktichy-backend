@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DatabaseExceptionFilter } from 'common/filters/db-exception.filter';
+import { DatabaseExceptionFilter } from './common/filters/db-exception.filter';
 import './intrument';
 
 async function bootstrap() {

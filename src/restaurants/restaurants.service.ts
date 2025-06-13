@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Restaurant } from 'entities/restaurant.entity';
+import { Restaurant } from '../entities/restaurant.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
