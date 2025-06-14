@@ -38,11 +38,22 @@ export class RestaurantsService {
     return `This action returns a #${id} restaurant`;
   }
 
-  update(id: number, updateRestaurantDto: UpdateRestaurantDto) {
-    return `This action updates a #${id} restaurant`;
+  async update(id: number, updateRestaurantDto: UpdateRestaurantDto) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id },
+    });
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+    Object.assign(restaurant, updateRestaurantDto);
+    return await this.restaurantRepository.save(restaurant);
   }
 
   remove(id: number) {
     return `This action removes a #${id} restaurant`;
+  }
+
+  async findByUserId(userId: number) {
+    return this.restaurantRepository.find({ where: { owner: { id: userId } } });
   }
 }

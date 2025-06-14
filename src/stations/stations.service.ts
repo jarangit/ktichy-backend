@@ -36,4 +36,10 @@ export class StationsService {
   remove(id: number) {
     return `This action removes a #${id} station`;
   }
+
+  async findByRestaurantId(restaurantId: number) {
+    return this.stationRepository.find({
+      where: { restaurant: { id: restaurantId } },
+    });
+  }
 }

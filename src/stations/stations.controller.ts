@@ -17,7 +17,6 @@ export class StationsController {
 
   @Post()
   create(@Body() createStationDto: CreateStationDto) {
-    console.log("🚀 ~ StationsController ~ create ~ createStationDto:", createStationDto)
     return this.stationsService.create(createStationDto);
   }
 
@@ -29,6 +28,11 @@ export class StationsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.stationsService.findOne(+id);
+  }
+
+  @Get('restaurant/:restaurantId')
+  findByRestaurantId(@Param('restaurantId') restaurantId: string) {
+    return this.stationsService.findByRestaurantId(+restaurantId);
   }
 
   @Patch(':id')

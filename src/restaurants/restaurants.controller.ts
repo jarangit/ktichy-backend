@@ -18,10 +18,6 @@ export class RestaurantsController {
 
   @Post()
   create(@Body() createRestaurantDto: CreateRestaurantDto) {
-    console.log(
-      '🚀 ~ RestaurantsController ~ create ~ createRestaurantDto:',
-      createRestaurantDto,
-    );
     return this.restaurantsService.create(createRestaurantDto);
   }
   @Get()
@@ -32,6 +28,11 @@ export class RestaurantsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.restaurantsService.findOne(+id);
+  }
+
+  @Get('user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.restaurantsService.findByUserId(+userId);
   }
 
   @Patch(':id')
