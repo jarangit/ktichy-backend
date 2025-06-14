@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { OrderModule } from './order/order.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SentryModule } from '@sentry/nestjs/setup';
@@ -9,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { StationsModule } from './stations/stations.module';
 import { MenusModule } from './menus/menus.module';
+import { OrdersModule } from './orders/orders.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -21,13 +21,13 @@ import { MenusModule } from './menus/menus.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    OrderModule,
     ScheduleModule.forRoot(),
     SentryModule.forRoot(),
     UsersModule,
     RestaurantsModule,
     StationsModule,
     MenusModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

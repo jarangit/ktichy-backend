@@ -11,8 +11,20 @@ export class MenusService {
     @InjectRepository(Menu)
     private readonly menuRepository: Repository<Menu>,
   ) {}
-  create(createMenuDto: CreateMenuDto) {
-    return this.menuRepository.create(createMenuDto);
+  async create(createMenuDto: CreateMenuDto) {
+    const restaurant = await this.menuRepository.manager.findOne('Restaurant', {
+      where: { id: createMenuDto.restaurantId },
+    });
+    if (!restaurant) {
+      throw new Error(`Restaurant #${createMenuDto.restaurantId} not found`);
+    }
+
+    // Create a new menu with the restaurant relation
+    const menu = this.menuRepository.create({
+      ...createMenuDto,
+      restaurant,
+    });
+    return await this.menuRepository.save(menu);
   }
 
   findAll() {
@@ -23,11 +35,13 @@ export class MenusService {
     return `This action returns a #${id} menu`;
   }
 
-  update(id: number, updateMenuDto: UpdateMenuDto) {
-    return `This action updates a #${id} menu`;
+  async update(id: number, updateMenuDto: UpdateMenuDto) {
+    await this.menuRepository.update(id, updateMenuDto);
+    return this.menuRepository.findOneBy({ id });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} menu`;
+  async remove(id: number) {
+    await this.menuRepository.delete(id);
+    return { message: `Menu #${id} has been removed` };
   }
 }

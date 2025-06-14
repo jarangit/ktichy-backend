@@ -9,9 +9,9 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
-import { Order } from './order.entity';
 import { Station } from './station.entity';
 import { User } from './user.entity';
+import { Order } from 'orders/entities/order.entity';
 
 @Entity()
 export class Restaurant {

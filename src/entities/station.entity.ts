@@ -18,20 +18,14 @@ export class Station {
   @ManyToOne(() => Restaurant, (restaurant) => restaurant.stations, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'restaurant_id' })
+  @JoinColumn({ name: 'restaurantId' })
   restaurant: Restaurant;
 
   @Column()
-  restaurant_id: number;
+  restaurantId: number;
 
   @Column()
   name: string;
-
-  @Column({
-    type: 'enum',
-    enum: ['DRINK', 'FOOD', 'OTHER'],
-  })
-  type: 'DRINK' | 'FOOD' | 'OTHER';
 
   @CreateDateColumn()
   createdAt: Date;

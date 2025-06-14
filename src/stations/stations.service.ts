@@ -12,12 +12,7 @@ export class StationsService {
     private stationRepository: Repository<Station>,
   ) {}
   create(createStationDto: CreateStationDto) {
-    const { restaurantId, name, type } = createStationDto;
-    const station = this.stationRepository.create({
-      name,
-      type: type as 'DRINK' | 'FOOD' | 'OTHER',
-      restaurant_id: restaurantId,
-    });
+    const station = this.stationRepository.create(createStationDto);
     return this.stationRepository.save(station);
   }
 
@@ -29,12 +24,14 @@ export class StationsService {
     return `This action returns a #${id} station`;
   }
 
-  update(id: number, updateStationDto: UpdateStationDto) {
-    return `This action updates a #${id} station`;
+  async update(id: number, updateStationDto: UpdateStationDto) {
+    await this.stationRepository.update(id, updateStationDto);
+    return this.stationRepository.findOneBy({ id });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} station`;
+  async remove(id: number) {
+    await this.stationRepository.delete(id);
+    return { message: `Station #${id} has been removed` };
   }
 
   async findByRestaurantId(restaurantId: number) {
