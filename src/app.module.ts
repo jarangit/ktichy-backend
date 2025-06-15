@@ -9,6 +9,7 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
 import { StationsModule } from './stations/stations.module';
 import { MenusModule } from './menus/menus.module';
 import { OrdersModule } from './orders/orders.module';
+import { AuthModule } from 'auth/auth.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -28,6 +29,7 @@ import { OrdersModule } from './orders/orders.module';
     StationsModule,
     MenusModule,
     OrdersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

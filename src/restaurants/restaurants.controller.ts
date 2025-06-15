@@ -11,7 +11,7 @@ import {
 import { RestaurantsService } from './restaurants.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from 'auth/jwt-auth-guard';
 @Controller('restaurants')
 export class RestaurantsController {
   constructor(private readonly restaurantsService: RestaurantsService) {}
@@ -30,6 +30,7 @@ export class RestaurantsController {
     return this.restaurantsService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('user/:userId')
   findByUserId(@Param('userId') userId: string) {
     return this.restaurantsService.findByUserId(+userId);

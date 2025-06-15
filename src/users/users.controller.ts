@@ -6,14 +6,26 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from 'auth/jwt-auth-guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getMe(@Req() req: Request) {
+    const userId = (req as any).user['id']; // Type assertion to bypass TypeScript error
+    return this.usersService.getMe(userId);
+  }
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
