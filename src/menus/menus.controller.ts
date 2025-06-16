@@ -39,4 +39,9 @@ export class MenusController {
   remove(@Param('id') id: string) {
     return this.menusService.remove(+id);
   }
+
+  @Get('restaurant/:restaurantId')
+  findByRestaurantId(@Param('restaurantId') restaurantId: number) {
+    return this.menusService.findByRestaurantId(+restaurantId);
+  }
 }

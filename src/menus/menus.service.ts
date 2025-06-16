@@ -44,4 +44,14 @@ export class MenusService {
     await this.menuRepository.delete(id);
     return { message: `Menu #${id} has been removed` };
   }
+
+  async findByRestaurantId(restaurantId: number) {
+    const menus = await this.menuRepository.find({
+      where: { restaurant: { id: restaurantId } },
+    });
+    if (menus.length === 0) {
+      throw new Error(`No menus found for restaurant #${restaurantId}`);
+    }
+    return menus;
+  }
 }
