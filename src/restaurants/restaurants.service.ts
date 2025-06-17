@@ -17,9 +17,9 @@ export class RestaurantsService {
     const existing = await this.restaurantRepository.findOne({
       where: { owner_id: userId },
     });
-    if (existing) {
-      throw new BadRequestException('You already have a restaurant created.');
-    }
+    // if (existing) {
+    //   throw new BadRequestException('You already have a restaurant created.');
+    // }
 
     // 2️⃣ ถ้ายังไม่มี → สร้างใหม่
     const restaurant = this.restaurantRepository.create({
@@ -34,8 +34,14 @@ export class RestaurantsService {
     return `This action returns all restaurants`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} restaurant`;
+  async findOne(id: number, userId: number) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id, owner_id: userId },
+    });
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found or you are not the owner');
+    }
+    return restaurant;
   }
 
   async update(id: number, updateRestaurantDto: UpdateRestaurantDto) {

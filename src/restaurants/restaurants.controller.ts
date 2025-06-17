@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { RestaurantsService } from './restaurants.service';
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
@@ -25,9 +26,11 @@ export class RestaurantsController {
     return this.restaurantsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.restaurantsService.findOne(+id);
+  findOne(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user?.sub;
+    return this.restaurantsService.findOne(+id, userId);
   }
 
   @UseGuards(JwtAuthGuard)

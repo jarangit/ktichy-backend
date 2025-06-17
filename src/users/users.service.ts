@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +10,7 @@ import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -43,7 +48,13 @@ export class UsersService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
+    console.log("🚀 ~ UsersService ~ login ~ email:", email)
+    // ต้องระบุ select: ["id", "email", "passwordHash"] เพื่อให้ได้ passwordHash มาด้วย
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'passwordHash'],
+    });
+    console.log("🚀 ~ UsersService ~ login ~ user:", user)
     if (!user) {
       throw new BadRequestException('Invalid email or password');
     }
@@ -59,7 +70,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user;
+    return user; // Convert to plain object to exclude passwordHash
   }
   // utils
   private generateToken(user: User) {

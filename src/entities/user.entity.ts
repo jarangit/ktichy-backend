@@ -8,6 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 export class User {
@@ -17,7 +18,8 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ select: false })
+  @Exclude()
   passwordHash: string;
 
   @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
