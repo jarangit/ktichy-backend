@@ -39,7 +39,9 @@ export class RestaurantsService {
       where: { id, owner_id: userId },
     });
     if (!restaurant) {
-      throw new BadRequestException('Restaurant not found or you are not the owner');
+      throw new BadRequestException(
+        'Restaurant not found or you are not the owner',
+      );
     }
     return restaurant;
   }
@@ -55,8 +57,21 @@ export class RestaurantsService {
     return await this.restaurantRepository.save(restaurant);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} restaurant`;
+  async remove(id: number, userId: number) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id, owner_id: userId },
+    });
+    if (!restaurant) {
+      throw new BadRequestException(
+        'Restaurant not found or you are not the owner',
+      );
+    }
+    return this.restaurantRepository.delete(id).then((result) => {
+      if (result.affected === 0) {
+        throw new BadRequestException('Restaurant not found');
+      }
+      return { message: 'Restaurant deleted successfully' };
+    });
   }
 
   async findByUserId(userId: number) {

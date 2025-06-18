@@ -48,7 +48,8 @@ export class RestaurantsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.restaurantsService.remove(+id);
+  remove(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user?.sub;
+    return this.restaurantsService.remove(+id, userId);
   }
 }
