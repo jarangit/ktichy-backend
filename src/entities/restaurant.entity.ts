@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { Station } from './station.entity';
 import { User } from './user.entity';
-import { Order } from 'orders/entities/order.entity';
+import { Order } from '../orders/entities/order.entity';
 
 @Entity()
 export class Restaurant {

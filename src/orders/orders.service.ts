@@ -8,9 +8,9 @@ import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
-import { Product } from 'products/entities/product.entity';
-import { OrderItem } from '@entities/order-item.entity';
-import { OrderStationItem } from '@entities/order-station-item.entity';
+import { Product } from '../products/entities/product.entity';
+import { OrderItem } from '../entities/order-item.entity';
+import { OrderStationItem } from '../entities/order-station-item.entity';
 
 @Injectable()
 export class OrdersService {
@@ -60,12 +60,16 @@ export class OrdersService {
         station: product.station,
         status: 'pending',
       });
-
       orderItem.stationItems = [stationItems];
       order.items.push(orderItem);
     }
+    const data = {
+      orderNumber: createOrderDto.orderNumber,
+      restaurant,
+      items: order.items,
+    };
 
-    return this.orderRepository.save(order);
+    return await this.orderRepository.save(data);
   }
 
   async findAll(): Promise<Order[]> {

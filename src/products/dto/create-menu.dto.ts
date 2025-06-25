@@ -1,4 +1,5 @@
 export class CreateMenuDto {
-  readonly name: string;
-  readonly restaurantId: number;
+   name: string;
+   restaurantId: number;
+   stationId: number;
 }

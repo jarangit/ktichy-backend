@@ -7,8 +7,8 @@ import {
   ManyToOne,
   OneToMany,
 } from 'typeorm';
-import { OrderItem } from '@entities/order-item.entity';
-import { Restaurant } from '@entities/restaurant.entity';
+import { OrderItem } from '../../entities/order-item.entity';
+import { Restaurant } from '../../entities/restaurant.entity';
 
 export enum OrderStatus {
   NEW = 'NEW',
@@ -47,7 +47,7 @@ export class Order {
 
  
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true, nullable: true })
-  items?: OrderItem[];
+  items: OrderItem[];
 
   // @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
   //   cascade: true,

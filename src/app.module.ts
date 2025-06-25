@@ -8,8 +8,8 @@ import { UsersModule } from './users/users.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { StationsModule } from './stations/stations.module';
 import { OrdersModule } from './orders/orders.module';
-import { AuthModule } from 'auth/auth.module';
-import { ProductsModule } from 'products/products.module';
+import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({

@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
 import { OrderItem } from '../entities/order-item.entity';
 import { OrderStationItem } from '../entities/order-station-item.entity';
-import { Product } from 'products/entities/product.entity';
+import { Product } from '../products/entities/product.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order, OrderItem, OrderStationItem, Product])],

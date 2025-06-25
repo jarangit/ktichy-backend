@@ -1,6 +1,6 @@
 // src/menu/menu.entity.ts
-import { Restaurant } from '@entities/restaurant.entity';
-import { Station } from '@entities/station.entity';
+import { Restaurant } from '../../entities/restaurant.entity';
+import { Station } from '../../entities/station.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

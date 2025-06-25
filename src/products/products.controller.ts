@@ -6,18 +6,23 @@ import {
   Patch,
   Param,
   Delete,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { ProductService } from './products.service';
+import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productService: ProductService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createMenuDto: CreateMenuDto) {
-    return this.productService.create(createMenuDto);
+  create(@Body() createMenuDto: CreateMenuDto, @Req() req: any) {
+    const userId = req.user?.sub;
+    return this.productService.create(createMenuDto, userId);
   }
 
   @Get()
