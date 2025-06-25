@@ -1,5 +1,6 @@
 // src/menu/menu.entity.ts
 import { Restaurant } from '@entities/restaurant.entity';
+import { Station } from '@entities/station.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -9,8 +10,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-
-
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()
@@ -18,6 +17,9 @@ export class Product {
 
   @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
   restaurant: Restaurant;
+
+  @ManyToOne(() => Station)
+  station: Station;
 
   @Column()
   name: string;

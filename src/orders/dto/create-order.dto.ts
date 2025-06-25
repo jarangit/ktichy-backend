@@ -12,4 +12,6 @@ export class CreateOrderDto {
   restaurantId: number;
   @IsString()
   orderNumber: string;
+
+  products: { productId: number; quantity: number }[];
 }

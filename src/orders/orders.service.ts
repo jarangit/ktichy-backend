@@ -1,18 +1,37 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
+import { Product } from 'products/entities/product.entity';
+import { OrderItem } from '@entities/order-item.entity';
+import { OrderStationItem } from '@entities/order-station-item.entity';
 
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
+
+    @InjectRepository(OrderItem)
+    private readonly orderItemRepository: Repository<OrderItem>,
+
+    @InjectRepository(OrderStationItem)
+    private readonly orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    const order = this.orderRepository.create();
+    order.items = [];
+    const { products } = createOrderDto;
     const restaurant = await this.orderRepository.manager.findOne(
       'Restaurant',
       { where: { id: createOrderDto.restaurantId } },
@@ -23,10 +42,29 @@ export class OrdersService {
       );
     }
 
-    const order = this.orderRepository.create({
-      ...createOrderDto,
-      restaurant,
-    });
+    for (const item of products) {
+      if (!item.productId || !item.quantity) {
+        throw new BadRequestException('Product ID and quantity are required');
+      }
+      const product = await this.productRepository.findOne({
+        where: { id: item.productId },
+        relations: ['station'],
+      });
+
+      const orderItem = this.orderItemRepository.create({
+        product,
+        quantity: item.quantity,
+      });
+
+      const stationItems = this.orderStationItemRepository.create({
+        station: product.station,
+        status: 'pending',
+      });
+
+      orderItem.stationItems = [stationItems];
+      order.items.push(orderItem);
+    }
+
     return this.orderRepository.save(order);
   }
 

@@ -6,24 +6,16 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { OrderStationItem } from './order-station-item.entity';
+import { Order } from '../orders/entities/order.entity';
+import { Product } from 'products/entities/product.entity';
 
 @Entity()
 export class OrderItem {
   @PrimaryGeneratedColumn()
   id: number;
-
-  // @ManyToOne(() => Order, (order) => order.items)
-  // order: Order;
-
-  @Column()
-  name: string;
-
-  @Column({
-    type: 'enum',
-    enum: ['DRINK', 'FOOD', 'OTHER'],
-  })
-  type: 'DRINK' | 'FOOD' | 'OTHER';
 
   @Column({
     type: 'enum',
@@ -32,8 +24,20 @@ export class OrderItem {
   })
   status: 'NEW' | 'PREPARING' | 'READY';
 
+  @ManyToOne(() => Product)
+  product: Product;
+
+  @OneToMany(() => OrderStationItem, (osi) => osi.orderItem, { cascade: true })
+  stationItems: OrderStationItem[];
+
+  @ManyToOne(() => Order, (order) => order.items)
+  order: Order;
+
   @Column({ nullable: true })
   notes: string;
+  
+  @Column()
+  quantity: number;
 
   @CreateDateColumn()
   createdAt: Date;
