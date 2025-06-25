@@ -7,41 +7,41 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { MenusService } from './menus.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { ProductService } from './products.service';
 
-@Controller('menus')
-export class MenusController {
-  constructor(private readonly menusService: MenusService) {}
+@Controller('products')
+export class ProductsController {
+  constructor(private readonly productService: ProductService) {}
 
   @Post()
   create(@Body() createMenuDto: CreateMenuDto) {
-    return this.menusService.create(createMenuDto);
+    return this.productService.create(createMenuDto);
   }
 
   @Get()
   findAll() {
-    return this.menusService.findAll();
+    return this.productService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.menusService.findOne(+id);
+    return this.productService.findOne(+id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
-    return this.menusService.update(+id, updateMenuDto);
+    return this.productService.update(+id, updateMenuDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.menusService.remove(+id);
+    return this.productService.remove(+id);
   }
 
   @Get('restaurant/:restaurantId')
   findByRestaurantId(@Param('restaurantId') restaurantId: number) {
-    return this.menusService.findByRestaurantId(+restaurantId);
+    return this.productService.findByRestaurantId(+restaurantId);
   }
 }

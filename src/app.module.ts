@@ -7,9 +7,9 @@ import { SentryModule } from '@sentry/nestjs/setup';
 import { UsersModule } from './users/users.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { StationsModule } from './stations/stations.module';
-import { MenusModule } from './menus/menus.module';
 import { OrdersModule } from './orders/orders.module';
 import { AuthModule } from 'auth/auth.module';
+import { ProductsModule } from 'products/products.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -27,7 +27,7 @@ import { AuthModule } from 'auth/auth.module';
     UsersModule,
     RestaurantsModule,
     StationsModule,
-    MenusModule,
+    ProductsModule,
     OrdersModule,
     AuthModule,
   ],
