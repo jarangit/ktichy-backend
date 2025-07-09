@@ -6,10 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { StationsService } from './stations.service';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
 @Controller('stations')
 export class StationsController {
@@ -25,9 +28,14 @@ export class StationsController {
     return this.stationsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.stationsService.findOne(+id);
+  findOne(@Param('id') stationId: string, @Req() req: any) {
+    const userId = req.user?.sub;
+    return this.stationsService.findOne({
+      id: +stationId,
+      userId,
+    });
   }
 
   @Get('restaurant/:restaurantId')

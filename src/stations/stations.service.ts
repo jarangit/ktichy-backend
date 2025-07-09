@@ -20,8 +20,16 @@ export class StationsService {
     return `This action returns all stations`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} station`;
+  async findOne({ id, userId }: { id: number; userId?: number }) {
+    if (userId) {
+      const station = await this.stationRepository.findOne({
+        where: { id, restaurant: { owner_id: userId } },
+      });
+      if (!station) {
+        throw new Error(`Station with ID ${id} not found for user ${userId}`);
+      }
+      return station;
+    }
   }
 
   async update(id: number, updateStationDto: UpdateStationDto) {
