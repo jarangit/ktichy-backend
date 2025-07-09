@@ -1,6 +1,6 @@
+import { OrderItem } from "@entities/order-item.entity";
+import { Station } from "@entities/station.entity";
 import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from "typeorm";
-import { Station } from "./station.entity";
-import { OrderItem } from "./order-item.entity";
 
 @Entity()
 export class OrderStationItem {

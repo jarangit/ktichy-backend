@@ -10,7 +10,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderItem } from '../entities/order-item.entity';
-import { OrderStationItem } from '../entities/order-station-item.entity';
+import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
 
 @Injectable()
 export class OrdersService {

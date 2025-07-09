@@ -8,9 +8,9 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { OrderStationItem } from './order-station-item.entity';
 import { Order } from '../orders/entities/order.entity';
 import { Product } from '../products/entities/product.entity';
+import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
 
 @Entity()
 export class OrderItem {
