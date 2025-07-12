@@ -29,7 +29,7 @@ export class OrderStationItemService {
     // api for find all order station items by station id
     return this.orderStationItemRepository.find({
       where: { station: { id: stationId } },
-      relations: ['station', 'orderItem',],
+      relations: ['orderItem', 'orderItem.product', 'orderItem.order'],
     });
   }
 

@@ -107,4 +107,15 @@ export class OrdersService {
     }
     return orders;
   }
+
+  async findByStationId(stationId: number): Promise<Order[]> {
+    const orders = await this.orderRepository.find({
+      where: { items: { stationItems: { station: { id: stationId } } } },
+      relations: ['items', 'items.product'],
+    });
+    if (!orders.length) {
+      throw new NotFoundException(`No orders found for station #${stationId}`);
+    }
+    return orders;
+  }
 }

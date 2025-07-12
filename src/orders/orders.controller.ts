@@ -39,9 +39,14 @@ export class OrdersController {
   remove(@Param('id') id: string) {
     return this.ordersService.remove(+id);
   }
-  
+
   @Get('restaurant/:restaurantId')
   findByRestaurantId(@Param('restaurantId') restaurantId: string) {
     return this.ordersService.findByRestaurantId(+restaurantId);
+  }
+
+  @Get('station/:stationId')
+  findByStationId(@Param('stationId') stationId: string) {
+    return this.ordersService.findByStationId(+stationId);
   }
 }

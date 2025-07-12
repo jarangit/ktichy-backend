@@ -35,7 +35,7 @@ export class OrderItem {
 
   @Column({ nullable: true })
   notes: string;
-  
+
   @Column()
   quantity: number;
 
