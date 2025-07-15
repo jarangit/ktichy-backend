@@ -45,8 +45,10 @@ export class Order {
   })
   restaurant: Restaurant;
 
- 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true, nullable: true })
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
+    cascade: true,
+    nullable: true,
+  })
   items: OrderItem[];
 
   // @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {

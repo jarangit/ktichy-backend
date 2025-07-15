@@ -89,11 +89,46 @@ export class OrdersService {
     return this.orderRepository.save(order);
   }
 
-  async remove(id: number): Promise<{ message: string }> {
-    const order = await this.orderRepository.findOneBy({ id });
-    if (!order) throw new NotFoundException(`Order #${id} not found`);
-    await this.orderRepository.delete(id);
-    return { message: `Order #${id} has been removed` };
+  async remove({
+    orderId,
+    userId,
+  }: {
+    orderId: number;
+    userId: number;
+  }): Promise<{ message: string }> {
+    const order = await this.orderRepository.findOne({
+      where: {
+        id: orderId,
+        restaurant: {
+          owner: { id: userId },
+        },
+      },
+      relations: [
+        'restaurant',
+        'restaurant.owner',
+        'items',
+        'items.stationItems',
+      ],
+    });
+
+    if (!order) throw new NotFoundException(`Order #${orderId} not found`);
+
+    // ลบ OrderStationItems ก่อน
+    for (const item of order.items) {
+      if (item.stationItems?.length) {
+        await this.orderStationItemRepository.remove(item.stationItems);
+      }
+    }
+
+    // ลบ OrderItems
+    if (order.items?.length) {
+      await this.orderItemRepository.remove(order.items);
+    }
+
+    // ลบ Order
+    await this.orderRepository.remove(order);
+
+    return { message: `Order #${orderId} has been removed` };
   }
 
   async findByRestaurantId(restaurantId: number): Promise<Order[]> {

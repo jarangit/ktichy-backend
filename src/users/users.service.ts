@@ -10,7 +10,6 @@ import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -48,13 +47,11 @@ export class UsersService {
   }
 
   async login(email: string, password: string) {
-    console.log("🚀 ~ UsersService ~ login ~ email:", email)
     // ต้องระบุ select: ["id", "email", "passwordHash"] เพื่อให้ได้ passwordHash มาด้วย
     const user = await this.userRepository.findOne({
       where: { email },
       select: ['id', 'email', 'passwordHash'],
     });
-    console.log("🚀 ~ UsersService ~ login ~ user:", user)
     if (!user) {
       throw new BadRequestException('Invalid email or password');
     }
@@ -77,7 +74,7 @@ export class UsersService {
     const payload = { sub: user.id, email: user.email };
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET || 'defaultSecret',
-      expiresIn: '1h', // Token expiration time
+      expiresIn: '30d', // Token expiration time
     });
     return {
       access_token: token,

@@ -6,10 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
 @Controller('orders')
 export class OrdersController {
@@ -34,10 +37,14 @@ export class OrdersController {
   update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
     return this.ordersService.update(+id, updateOrderDto);
   }
-
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ordersService.remove(+id);
+  remove(@Param('id') id: string, @Req() req: any) {
+    const userId = req.user?.sub;
+    return this.ordersService.remove({
+      orderId: +id,
+      userId,
+    });
   }
 
   @Get('restaurant/:restaurantId')
