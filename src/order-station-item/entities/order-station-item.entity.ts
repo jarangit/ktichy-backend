@@ -1,6 +1,6 @@
-import { OrderItem } from "@entities/order-item.entity";
-import { Station } from "@entities/station.entity";
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from "typeorm";
+import { OrderItem } from '@entities/order-item.entity';
+import { Station } from '@entities/station.entity';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
 
 @Entity()
 export class OrderStationItem {
@@ -10,7 +10,9 @@ export class OrderStationItem {
   @ManyToOne(() => Station)
   station: Station;
 
-  @ManyToOne(() => OrderItem, item => item.stationItems)
+  @ManyToOne(() => OrderItem, (item) => item.stationItems, {
+    onDelete: 'CASCADE',
+  })
   orderItem: OrderItem;
 
   @Column({ default: 'pending' })

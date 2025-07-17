@@ -113,19 +113,6 @@ export class OrdersService {
 
     if (!order) throw new NotFoundException(`Order #${orderId} not found`);
 
-    // ลบ OrderStationItems ก่อน
-    for (const item of order.items) {
-      if (item.stationItems?.length) {
-        await this.orderStationItemRepository.remove(item.stationItems);
-      }
-    }
-
-    // ลบ OrderItems
-    if (order.items?.length) {
-      await this.orderItemRepository.remove(order.items);
-    }
-
-    // ลบ Order
     await this.orderRepository.remove(order);
 
     return { message: `Order #${orderId} has been removed` };

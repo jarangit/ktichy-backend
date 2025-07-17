@@ -46,7 +46,7 @@ export class Order {
   restaurant: Restaurant;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
-    cascade: true,
+    onDelete: 'CASCADE',
     nullable: true,
   })
   items: OrderItem[];

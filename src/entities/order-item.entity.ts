@@ -27,10 +27,15 @@ export class OrderItem {
   @ManyToOne(() => Product)
   product: Product;
 
-  @OneToMany(() => OrderStationItem, (osi) => osi.orderItem, { cascade: true })
+  @OneToMany(() => OrderStationItem, (osi) => osi.orderItem, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   stationItems: OrderStationItem[];
 
-  @ManyToOne(() => Order, (order) => order.items)
+  @ManyToOne(() => Order, (order) => order.items, {
+    onDelete: 'CASCADE',
+  })
   order: Order;
 
   @Column({ nullable: true })
