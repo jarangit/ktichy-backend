@@ -92,21 +92,21 @@ export class OrdersService {
 
   async findOne(id: number): Promise<Order> {
     const order = await this.orderRepository.findOneBy({ id });
-    
+
     if (!order) {
       throw new NotFoundException(`Order #${id} not found`);
     }
-    
+
     return order;
   }
 
   async update(id: number, updateOrderDto: UpdateOrderDto): Promise<Order> {
     const order = await this.orderRepository.findOneBy({ id });
-    
+
     if (!order) {
       throw new NotFoundException(`Order #${id} not found`);
     }
-    
+
     Object.assign(order, updateOrderDto);
     return this.orderRepository.save(order);
   }
@@ -147,13 +147,13 @@ export class OrdersService {
     const orders = await this.orderRepository.find({
       where: { restaurant: { id: restaurantId } },
     });
-    
+
     if (!orders.length) {
       throw new NotFoundException(
         `No orders found for restaurant #${restaurantId}`,
       );
     }
-    
+
     return orders;
   }
 
@@ -162,11 +162,11 @@ export class OrdersService {
       where: { items: { stationItems: { station: { id: stationId } } } },
       relations: ['items', 'items.product'],
     });
-    
+
     if (!orders.length) {
       throw new NotFoundException(`No orders found for station #${stationId}`);
     }
-    
+
     return orders;
   }
 }
