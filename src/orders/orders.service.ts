@@ -29,40 +29,54 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    // Initialize order
     const order = this.orderRepository.create();
     order.items = [];
+
     const { products } = createOrderDto;
+
+    // Find restaurant
     const restaurant = await this.orderRepository.manager.findOne(
       'Restaurant',
       { where: { id: createOrderDto.restaurantId } },
     );
+
     if (!restaurant) {
       throw new NotFoundException(
         `Restaurant #${createOrderDto.restaurantId} not found`,
       );
     }
 
+    // Process each product in the order
     for (const item of products) {
+      // Validate product item
       if (!item.productId || !item.quantity) {
         throw new BadRequestException('Product ID and quantity are required');
       }
+
+      // Find product with station relation
       const product = await this.productRepository.findOne({
         where: { id: item.productId },
         relations: ['station'],
       });
 
+      // Create order item
       const orderItem = this.orderItemRepository.create({
         product,
         quantity: item.quantity,
       });
 
+      // Create station item for this order item
       const stationItems = this.orderStationItemRepository.create({
         station: product.station,
         status: 'pending',
       });
+
       orderItem.stationItems = [stationItems];
       order.items.push(orderItem);
     }
+
+    // Prepare order data
     const data = {
       orderNumber: createOrderDto.orderNumber,
       restaurant,
@@ -78,13 +92,21 @@ export class OrdersService {
 
   async findOne(id: number): Promise<Order> {
     const order = await this.orderRepository.findOneBy({ id });
-    if (!order) throw new NotFoundException(`Order #${id} not found`);
+    
+    if (!order) {
+      throw new NotFoundException(`Order #${id} not found`);
+    }
+    
     return order;
   }
 
   async update(id: number, updateOrderDto: UpdateOrderDto): Promise<Order> {
     const order = await this.orderRepository.findOneBy({ id });
-    if (!order) throw new NotFoundException(`Order #${id} not found`);
+    
+    if (!order) {
+      throw new NotFoundException(`Order #${id} not found`);
+    }
+    
     Object.assign(order, updateOrderDto);
     return this.orderRepository.save(order);
   }
@@ -96,6 +118,7 @@ export class OrdersService {
     orderId: number;
     userId: number;
   }): Promise<{ message: string }> {
+    // Find order with all required relations
     const order = await this.orderRepository.findOne({
       where: {
         id: orderId,
@@ -111,7 +134,9 @@ export class OrdersService {
       ],
     });
 
-    if (!order) throw new NotFoundException(`Order #${orderId} not found`);
+    if (!order) {
+      throw new NotFoundException(`Order #${orderId} not found`);
+    }
 
     await this.orderRepository.remove(order);
 
@@ -122,11 +147,13 @@ export class OrdersService {
     const orders = await this.orderRepository.find({
       where: { restaurant: { id: restaurantId } },
     });
+    
     if (!orders.length) {
       throw new NotFoundException(
         `No orders found for restaurant #${restaurantId}`,
       );
     }
+    
     return orders;
   }
 
@@ -135,9 +162,11 @@ export class OrdersService {
       where: { items: { stationItems: { station: { id: stationId } } } },
       relations: ['items', 'items.product'],
     });
+    
     if (!orders.length) {
       throw new NotFoundException(`No orders found for station #${stationId}`);
     }
+    
     return orders;
   }
 }
