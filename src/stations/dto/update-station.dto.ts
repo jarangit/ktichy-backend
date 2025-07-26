@@ -4,4 +4,5 @@ import { CreateStationDto } from './create-station.dto';
 export class UpdateStationDto extends PartialType(CreateStationDto) {
   restaurantId?: number;
   name?: string;
+  color?: string;
 }

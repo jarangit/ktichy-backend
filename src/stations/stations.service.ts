@@ -1,15 +1,26 @@
-import { Injectable } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
 import { Station } from '../entities/station.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Product } from 'products/entities/product.entity';
+import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
 
 @Injectable()
 export class StationsService {
   constructor(
     @InjectRepository(Station)
     private stationRepository: Repository<Station>,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+    @InjectRepository(OrderStationItem)
+    private orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
   create(createStationDto: CreateStationDto) {
     const station = this.stationRepository.create(createStationDto);
@@ -36,12 +47,44 @@ export class StationsService {
     await this.stationRepository.update(id, updateStationDto);
     return this.stationRepository.findOneBy({ id });
   }
+  async remove(id: number, force: boolean = false) {
+    const station = await this.stationRepository.findOne({
+      where: { id },
+      relations: [
+        'products',
+        'orderStationItems',
+        'orderStationItems.orderItem',
+        'orderStationItems.orderItem.order',
+      ],
+    });
 
-  async remove(id: number) {
-    await this.stationRepository.delete(id);
-    return { message: `Station #${id} has been removed` };
+    if (!station) {
+      throw new NotFoundException(`Station #${id} not found`);
+    }
+
+    // ตรวจสอบว่ามี active orders หรือไม่
+
+    if (!force && station.orderStationItems?.length > 0) {
+      throw new BadRequestException(
+        `Cannot delete station. There are ${station.orderStationItems.length} pending orders. Use force=true to delete anyway.`,
+      );
+    }
+
+    if (!force && station.products?.length > 0) {
+      throw new BadRequestException(
+        `Cannot delete station. There are ${station.products.length} products associated with this station. Use force=true to delete anyway.`,
+      );
+    }
+
+    // ลบ Station
+    await this.stationRepository.remove(station);
+
+    return {
+      message: `Station #${id} has been removed successfully`,
+      deletedProducts: station.products?.length || 0,
+      deletedOrderStationItems: station.orderStationItems?.length || 0,
+    };
   }
-
   async findByRestaurantId(restaurantId: number) {
     return this.stationRepository.find({
       where: { restaurant: { id: restaurantId } },

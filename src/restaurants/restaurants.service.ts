@@ -35,15 +35,25 @@ export class RestaurantsService {
   }
 
   async findOne(id: number, userId: number) {
-    const restaurant = await this.restaurantRepository.findOne({
-      where: { id, owner_id: userId },
-    });
-    if (!restaurant) {
-      throw new BadRequestException(
-        'Restaurant not found or you are not the owner',
-      );
+    try {
+      const restaurant = await this.restaurantRepository.findOne({
+        where: { id, owner_id: userId },
+      });
+      if (!restaurant) {
+        throw new BadRequestException({
+          message: 'Restaurant not found or you are not the owner',
+          errorCode: 'RESTAURANT_NOT_FOUND',
+        });
+      }
+      return restaurant;
+    } catch (error) {
+      // ถ้าเป็น error จากระบบ เช่น DB ล่ม
+      throw new BadRequestException({
+        message: 'Something went wrong while fetching restaurant',
+        errorCode: 'FIND_RESTAURANT_FAILED',
+        detail: error.message,
+      });
     }
-    return restaurant;
   }
 
   async update(id: number, updateRestaurantDto: UpdateRestaurantDto) {

@@ -18,16 +18,27 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const timestamp = new Date().toISOString();
 
-    // ตรวจสอบ error จาก DB (อาจปรับตาม error ที่เจอจริง)
-    if (
-      exception?.name?.includes('QueryFailedError') ||
+    // ตรวจสอบ error จาก DB
+    if (exception?.name?.includes('QueryFailedError')) {
+      // แสดง error ที่แท้จริงจาก database
+      response.status(400).json({
+        statusCode: 400,
+        error: 'Database Query Error',
+        message: exception.message || 'Database query failed',
+        sqlMessage: exception.sqlMessage || null,
+        sqlCode: exception.code || null,
+        timestamp,
+        path: request.originalUrl,
+      });
+    } else if (
       exception?.message?.includes('ECONNREFUSED') ||
       exception?.message?.includes('Database not ready')
     ) {
       response.status(503).json({
         statusCode: 503,
         error: 'Service Unavailable',
-        message: 'Database not ready',
+        message: 'Database connection failed',
+        details: exception.message,
         timestamp,
         path: request.originalUrl,
       });
@@ -42,10 +53,14 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
         path: request.originalUrl,
       });
     } else {
+      // แสดง error details ใน development
+      const isDevelopment = process.env.NODE_ENV === 'development';
+
       response.status(500).json({
         statusCode: 500,
         error: 'Internal Server Error',
-        message: 'Internal server error',
+        message: isDevelopment ? exception.message : 'Internal server error',
+        details: isDevelopment ? exception.stack : undefined,
         timestamp,
         path: request.originalUrl,
       });

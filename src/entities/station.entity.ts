@@ -7,8 +7,11 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
+import { Product } from '../products/entities/product.entity';
+import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
 
 @Entity()
 export class Station {
@@ -21,11 +24,30 @@ export class Station {
   @JoinColumn({ name: 'restaurantId' })
   restaurant: Restaurant;
 
+  @OneToMany(() => Product, (product) => product.station, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  products: Product[];
+
+  @OneToMany(
+    () => OrderStationItem,
+    (orderStationItem) => orderStationItem.station,
+    {
+      cascade: true,
+      onDelete: 'CASCADE',
+    },
+  )
+  orderStationItems: OrderStationItem[];
+
   @Column()
   restaurantId: number;
 
   @Column()
   name: string;
+
+  @Column()
+  color: string;
 
   @CreateDateColumn()
   createdAt: Date;
