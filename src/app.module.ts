@@ -11,6 +11,7 @@ import { OrdersModule } from './orders/orders.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { OrderStationItemModule } from './order-station-item/order-station-item.module';
+import { DeviceModule } from './device/device.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -32,6 +33,7 @@ import { OrderStationItemModule } from './order-station-item/order-station-item.
     OrdersModule,
     AuthModule,
     OrderStationItemModule,
+    DeviceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
