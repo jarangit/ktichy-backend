@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { DatabaseExceptionFilter } from './common/filters/db-exception.filter';
 import './intrument';
 import { ResponseInterceptor } from 'common/interceptor/response.interceptor';
+import { LoggingInterceptor } from 'midleware/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,7 +14,10 @@ async function bootstrap() {
     credentials: true, // ถ้ามี cookie/session
   });
   app.useGlobalFilters(new DatabaseExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(
+    new ResponseInterceptor(),
+    new LoggingInterceptor(),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }
