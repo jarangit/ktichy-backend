@@ -12,28 +12,39 @@ import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { OrderStationItemModule } from './order-station-item/order-station-item.module';
 import { DevicesModule } from './devices/devices.module';
+import { PairingCodesModule } from './pairing-codes/pairing-codes.module';
+
+const infrastructureModules = [
+  TypeOrmModule.forRoot({
+    type: 'mysql',
+    host: process.env.DB_HOST || 'mysql',
+    port: Number(process.env.DB_PORT) || 3306,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    autoLoadEntities: true,
+    synchronize: true,
+  }),
+  ScheduleModule.forRoot(),
+  SentryModule.forRoot(),
+];
+
+const featureModules = [
+  UsersModule,
+  RestaurantsModule,
+  StationsModule,
+  ProductsModule,
+  OrdersModule,
+  AuthModule,
+  OrderStationItemModule,
+  DevicesModule,
+  PairingCodesModule,
+];
+
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST || 'mysql',
-      port: Number(process.env.DB_PORT) || 3306,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      autoLoadEntities: true,
-      synchronize: true,
-    }),
-    ScheduleModule.forRoot(),
-    SentryModule.forRoot(),
-    UsersModule,
-    RestaurantsModule,
-    StationsModule,
-    ProductsModule,
-    OrdersModule,
-    AuthModule,
-    OrderStationItemModule,
-    DevicesModule,
+    ...infrastructureModules,
+    ...featureModules,
   ],
   controllers: [AppController],
   providers: [AppService],
