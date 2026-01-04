@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { nanoid10 } from '../utils/nanoid';
@@ -14,21 +18,24 @@ export class PairingCodesService {
   ) {}
 
   async create(dto: CreatePairingCodeDto): Promise<PairingCode> {
+    console.log('🚀 ~ PairingCodesService ~ create ~ dto:', dto);
     const existing = await this.pairingCodeRepository.findOne({
-      where: { code: dto.code },
+      where: { stationId: dto.stationId },
     });
 
     if (existing) {
-      throw new BadRequestException('Pairing code already exists');
+      throw new BadRequestException(
+        'Pairing code for this station already exists',
+      );
     }
 
     const pairingCode = this.pairingCodeRepository.create({
-      id: dto.id ?? `pc_${nanoid10()}`,
       storeId: dto.storeId,
-      code: dto.code,
+      stationId: dto.stationId,
+      code: '12345678', //nanoid10(),
       status: dto.status ?? PairingCodeStatus.PENDING,
       expiresAt: dto.expiresAt,
-      createdBy: dto.createdBy,
+      createdBy: Number(dto.createdBy),
     });
 
     return this.pairingCodeRepository.save(pairingCode);
@@ -38,15 +45,17 @@ export class PairingCodesService {
     return this.pairingCodeRepository.find({ order: { createdAt: 'DESC' } });
   }
 
-  async findOne(id: string): Promise<PairingCode> {
-    const pairingCode = await this.pairingCodeRepository.findOne({ where: { id } });
+  async findOne(id: number): Promise<PairingCode> {
+    const pairingCode = await this.pairingCodeRepository.findOne({
+      where: { id },
+    });
     if (!pairingCode) {
       throw new NotFoundException(`PairingCode #${id} not found`);
     }
     return pairingCode;
   }
 
-  async update(id: string, dto: UpdatePairingCodeDto): Promise<PairingCode> {
+  async update(id: number, dto: UpdatePairingCodeDto): Promise<PairingCode> {
     const pairingCode = await this.findOne(id);
 
     if (dto.code && dto.code !== pairingCode.code) {
@@ -62,7 +71,7 @@ export class PairingCodesService {
     return this.pairingCodeRepository.save(pairingCode);
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: number): Promise<{ message: string }> {
     const pairingCode = await this.findOne(id);
     await this.pairingCodeRepository.remove(pairingCode);
     return { message: `PairingCode #${id} has been removed` };

@@ -8,10 +8,12 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
+import { PairingCode } from 'pairing-codes/entities/pairing-code.entity';
 
 @Entity()
 export class Station {
@@ -29,6 +31,9 @@ export class Station {
     onDelete: 'CASCADE',
   })
   products: Product[];
+
+  @OneToOne(() => PairingCode, (pairingCode) => pairingCode.station)
+  pairingCodes: PairingCode;
 
   @OneToMany(
     () => OrderStationItem,
