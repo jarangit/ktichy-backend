@@ -12,9 +12,8 @@ export class DevicesService {
     private readonly deviceRepository: Repository<Device>,
   ) {}
   async create(createDeviceDto: CreateDeviceDto) {
-    const { deviceName } = createDeviceDto;
     const device = this.deviceRepository.create({ ...createDeviceDto });
-    return  this.deviceRepository.save(device);
+    return await this.deviceRepository.save(device);
   }
 
   findAll() {

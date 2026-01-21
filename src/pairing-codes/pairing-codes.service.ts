@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { nanoid10 } from '../utils/nanoid';
 import { CreatePairingCodeDto } from './dto/create-pairing-code.dto';
 import { UpdatePairingCodeDto } from './dto/update-pairing-code.dto';
 import { PairingCode, PairingCodeStatus } from './entities/pairing-code.entity';
@@ -18,7 +17,6 @@ export class PairingCodesService {
   ) {}
 
   async create(dto: CreatePairingCodeDto): Promise<PairingCode> {
-    console.log('🚀 ~ PairingCodesService ~ create ~ dto:', dto);
     const existing = await this.pairingCodeRepository.findOne({
       where: { stationId: dto.stationId },
     });

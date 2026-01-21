@@ -1,9 +1,12 @@
-import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Device {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  @Column({ type: 'varchar', nullable: true })
-  deviceName?: string;
+  @Column()
+  deviceName: string;
+
+  @Column()
+  fingerprint: string;
 }
