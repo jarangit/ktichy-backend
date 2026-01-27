@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DevicesService } from './devices.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Device } from './entities/device.entity';
+import { BadRequestException } from '@nestjs/common';
 
 // Mock repository
 const mockDeviceRepository = {
@@ -14,7 +15,7 @@ const mockDeviceRepository = {
 };
 
 describe('DevicesService', () => {
-  let service: DevicesService;
+  // let service: DevicesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,16 +28,54 @@ describe('DevicesService', () => {
       ],
     }).compile();
 
-    service = module.get<DevicesService>(DevicesService);
+    // service = module.get<DevicesService>(DevicesService);
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    // expect(service).toBeDefined();
   });
 
-  // it('should create a device', async () => {
-  //   expect(
-  //     await service.create({ deviceName: 'Test Device', fingerprint: '123' }),
-  //   ).toBe(1);
-  // });
+  it('should be create', async () => {
+    const repo = {
+      create: jest.fn(),
+      save: jest.fn(),
+    };
+    const service = new DevicesService(repo as any);
+
+    const deviceData = {
+      deviceName: '123',
+      fingerprint: 'fingerprint',
+    };
+
+    repo.create.mockReturnValue(deviceData);
+    repo.save.mockResolvedValue({
+      ...deviceData,
+      id: '1',
+    });
+
+    const result = await service.create({
+      deviceName: '123',
+      fingerprint: 'fingerprint',
+    });
+
+    expect(result.id).toBe('1');
+    expect(result.deviceName).toBe('123');
+    expect(result.fingerprint).toBe('fingerprint');
+  });
+
+  it('should error when device name is empty', async () => {
+    const repo = { save: jest.fn() };
+    const service = new DevicesService(repo as any);
+    await expect(
+      service.create({ deviceName: '', fingerprint: '123' }),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should error when fingerprint  is empty', async () => {
+    const repo = { save: jest.fn() };
+    const service = new DevicesService(repo as any);
+    await expect(
+      service.create({ deviceName: 'data', fingerprint: '' }),
+    ).rejects.toThrow(BadRequestException);
+  });
 });

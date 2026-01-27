@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { Repository } from 'typeorm/repository/Repository';
@@ -12,6 +12,11 @@ export class DevicesService {
     private readonly deviceRepository: Repository<Device>,
   ) {}
   async create(createDeviceDto: CreateDeviceDto) {
+    if (!createDeviceDto.deviceName || !createDeviceDto.fingerprint) {
+      throw new BadRequestException(
+        'Device name or fingerprint cannot be empty',
+      );
+    }
     const device = this.deviceRepository.create({ ...createDeviceDto });
     return await this.deviceRepository.save(device);
   }
