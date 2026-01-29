@@ -15,7 +15,7 @@ const mockDeviceRepository = {
 };
 
 describe('DevicesService', () => {
-  // let service: DevicesService;
+  let service: DevicesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -28,54 +28,75 @@ describe('DevicesService', () => {
       ],
     }).compile();
 
-    // service = module.get<DevicesService>(DevicesService);
+    service = module.get<DevicesService>(DevicesService);
   });
 
   it('should be defined', () => {
-    // expect(service).toBeDefined();
+    expect(service).toBeDefined();
   });
 
   it('should be create', async () => {
-    const repo = {
-      create: jest.fn(),
-      save: jest.fn(),
-    };
-    const service = new DevicesService(repo as any);
-
-    const deviceData = {
+    mockDeviceRepository.create.mockReturnValue({
       deviceName: '123',
       fingerprint: 'fingerprint',
-    };
-
-    repo.create.mockReturnValue(deviceData);
-    repo.save.mockResolvedValue({
-      ...deviceData,
-      id: '1',
     });
-
+    mockDeviceRepository.save.mockResolvedValue({
+      id: '1',
+      deviceName: '123',
+      fingerprint: 'fingerprint',
+    });
     const result = await service.create({
       deviceName: '123',
       fingerprint: 'fingerprint',
+      storeId: 'storeId',
+      stationId: 'stationId',
     });
-
     expect(result.id).toBe('1');
     expect(result.deviceName).toBe('123');
     expect(result.fingerprint).toBe('fingerprint');
   });
 
-  it('should error when device name is empty', async () => {
-    const repo = { save: jest.fn() };
-    const service = new DevicesService(repo as any);
-    await expect(
-      service.create({ deviceName: '', fingerprint: '123' }),
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('should error when fingerprint  is empty', async () => {
-    const repo = { save: jest.fn() };
-    const service = new DevicesService(repo as any);
-    await expect(
-      service.create({ deviceName: 'data', fingerprint: '' }),
-    ).rejects.toThrow(BadRequestException);
-  });
+  it.each([
+    {
+      field: 'deviceName',
+      data: {
+        deviceName: '',
+        fingerprint: '123',
+        storeId: 'storeId',
+        stationId: 'stationId',
+      },
+    },
+    {
+      field: 'fingerprint',
+      data: {
+        deviceName: 'data',
+        fingerprint: '',
+        storeId: 'storeId',
+        stationId: 'stationId',
+      },
+    },
+    {
+      field: 'storeId',
+      data: {
+        deviceName: 'data',
+        fingerprint: '123',
+        storeId: '',
+        stationId: 'stationId',
+      },
+    },
+    {
+      field: 'stationId',
+      data: {
+        deviceName: 'data',
+        fingerprint: '123',
+        storeId: 'storeId',
+        stationId: '',
+      },
+    },
+  ])(
+    'should throw BadRequestException when $field is empty',
+    async ({ data }) => {
+      await expect(service.create(data)).rejects.toThrow(BadRequestException);
+    },
+  );
 });

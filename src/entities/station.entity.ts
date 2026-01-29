@@ -12,8 +12,8 @@ import {
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 import { Product } from '../products/entities/product.entity';
-import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
-import { PairingCode } from 'pairing-codes/entities/pairing-code.entity';
+import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
+import { PairingCode } from '../pairing-codes/entities/pairing-code.entity';
 
 @Entity()
 export class Station {
