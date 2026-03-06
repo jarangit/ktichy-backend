@@ -32,26 +32,26 @@ export class ProductsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.productService.findOne(+id);
+    return this.productService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
-    return this.productService.update(+id, updateMenuDto);
+    return this.productService.update(id, updateMenuDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.productService.remove(+id);
+    return this.productService.remove(id);
   }
 
   @Get('restaurant/:restaurantId')
-  findByRestaurantId(@Param('restaurantId') restaurantId: number) {
-    return this.productService.findByRestaurantId(+restaurantId);
+  findByRestaurantId(@Param('restaurantId') restaurantId: string) {
+    return this.productService.findByRestaurantId(restaurantId);
   }
 
   @Get('store/:storeId')
-  findByStoreId(@Param('storeId') storeId: number) {
-    return this.productService.findByStoreId(+storeId);
+  findByStoreId(@Param('storeId') storeId: string) {
+    return this.productService.findByStoreId(storeId);
   }
 }

@@ -34,20 +34,20 @@ export class PairingCodesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number) {
+  findOne(@Param('id') id: string) {
     return this.pairingCodesService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() updatePairingCodeDto: UpdatePairingCodeDto,
   ) {
     return this.pairingCodesService.update(id, updatePairingCodeDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number) {
+  remove(@Param('id') id: string) {
     return this.pairingCodesService.remove(id);
   }
 }

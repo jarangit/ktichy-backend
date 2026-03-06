@@ -1,11 +1,18 @@
 import { OrderItem } from '@entities/order-item.entity';
 import { Station } from '@entities/station.entity';
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryColumn,
+  ManyToOne,
+  Column,
+  BeforeInsert,
+} from 'typeorm';
+import { nanoid10 } from '../../utils/nanoid';
 
 @Entity()
 export class OrderStationItem {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @ManyToOne(() => Station)
   station: Station;
@@ -17,4 +24,9 @@ export class OrderStationItem {
 
   @Column({ default: 'pending' })
   status: 'pending' | 'complete';
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }

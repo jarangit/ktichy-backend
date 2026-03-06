@@ -1,14 +1,16 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  BeforeInsert,
 } from 'typeorm';
 import { OrderItem } from '../../entities/order-item.entity';
 import { Restaurant } from '../../entities/restaurant.entity';
+import { nanoid10 } from '../../utils/nanoid';
 
 export enum OrderStatus {
   NEW = 'NEW',
@@ -18,8 +20,8 @@ export enum OrderStatus {
 
 @Entity()
 export class Order {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @Column()
   orderNumber: string;
@@ -55,4 +57,9 @@ export class Order {
   //   cascade: true,
   // })
   // items: OrderItem[];
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }

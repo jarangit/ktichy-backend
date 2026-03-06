@@ -31,7 +31,7 @@ export class StoresService {
     return `This action returns all stores`;
   }
 
-  async findOne(id: number, userId: number) {
+  async findOne(id: string, userId: string) {
     try {
       const store = await this.storeRepository.findOne({
         where: { id, owner_id: userId },
@@ -54,7 +54,7 @@ export class StoresService {
     }
   }
 
-  async update(id: number, updateStoreDto: UpdateStoreDto) {
+  async update(id: string, updateStoreDto: UpdateStoreDto) {
     const store = await this.storeRepository.findOne({
       where: { id },
     });
@@ -67,7 +67,7 @@ export class StoresService {
     return await this.storeRepository.save(store);
   }
 
-  async remove(id: number, userId: number) {
+  async remove(id: string, userId: string) {
     const store = await this.storeRepository.findOne({
       where: { id, owner_id: userId },
     });
@@ -84,7 +84,7 @@ export class StoresService {
     });
   }
 
-  async findByUserId(userId: number) {
+  async findByUserId(userId: string) {
     return this.storeRepository.find({ where: { owner: { id: userId } } });
   }
 }

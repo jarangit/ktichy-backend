@@ -1,9 +1,16 @@
 import { Restaurant } from '@entities/restaurant.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryColumn,
+} from 'typeorm';
+import { nanoid10 } from '../../utils/nanoid';
 
 @Entity()
 export class Device {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
   @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
@@ -14,4 +21,9 @@ export class Device {
 
   @Column()
   fingerprint: string;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }

@@ -92,7 +92,7 @@ export class OrdersService {
     return this.orderRepository.find();
   }
 
-  async findOne(id: number): Promise<Order> {
+  async findOne(id: string): Promise<Order> {
     const order = await this.orderRepository.findOneBy({ id });
 
     if (!order) {
@@ -102,7 +102,7 @@ export class OrdersService {
     return order;
   }
 
-  async update(id: number, updateOrderDto: UpdateOrderDto): Promise<Order> {
+  async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
     const order = await this.orderRepository.findOneBy({ id });
 
     if (!order) {
@@ -117,8 +117,8 @@ export class OrdersService {
     orderId,
     userId,
   }: {
-    orderId: number;
-    userId: number;
+    orderId: string;
+    userId: string;
   }): Promise<{ message: string }> {
     // Find order with all required relations
     const order = await this.orderRepository.findOne({
@@ -145,11 +145,11 @@ export class OrdersService {
     return { message: `Order #${orderId} has been removed` };
   }
 
-  async findByRestaurantId(restaurantId: number): Promise<Order[]> {
+  async findByRestaurantId(restaurantId: string): Promise<Order[]> {
     return this.findByStoreId(restaurantId);
   }
 
-  async findByStoreId(storeId: number): Promise<Order[]> {
+  async findByStoreId(storeId: string): Promise<Order[]> {
     const orders = await this.orderRepository.find({
       where: { restaurant: { id: storeId } },
     });
@@ -161,7 +161,7 @@ export class OrdersService {
     return orders;
   }
 
-  async findByStationId(stationId: number): Promise<Order[]> {
+  async findByStationId(stationId: string): Promise<Order[]> {
     const orders = await this.orderRepository.find({
       where: { items: { stationItems: { station: { id: stationId } } } },
       relations: ['items', 'items.product'],

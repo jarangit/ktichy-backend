@@ -11,7 +11,7 @@ export class ProductService {
     @InjectRepository(Product)
     private readonly menuRepository: Repository<Product>,
   ) {}
-  async create(createMenuDto: CreateMenuDto, userId: number) {
+  async create(createMenuDto: CreateMenuDto, userId: string) {
     const { stationId } = createMenuDto;
     const storeId = createMenuDto.storeId ?? createMenuDto.restaurantId;
 
@@ -57,25 +57,25 @@ export class ProductService {
     return `This action returns all menus`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} menu`;
   }
 
-  async update(id: number, updateMenuDto: UpdateMenuDto) {
+  async update(id: string, updateMenuDto: UpdateMenuDto) {
     await this.menuRepository.update(id, updateMenuDto);
     return this.menuRepository.findOneBy({ id });
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     await this.menuRepository.delete(id);
     return { message: `Menu #${id} has been removed` };
   }
 
-  async findByRestaurantId(restaurantId: number) {
+  async findByRestaurantId(restaurantId: string) {
     return this.findByStoreId(restaurantId);
   }
 
-  async findByStoreId(storeId: number) {
+  async findByStoreId(storeId: string) {
     const menus = await this.menuRepository.find({
       where: { restaurant: { id: storeId } },
     });

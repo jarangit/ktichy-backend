@@ -33,28 +33,28 @@ export class StationsController {
   findOne(@Param('id') stationId: string, @Req() req: any) {
     const userId = req.user?.sub;
     return this.stationsService.findOne({
-      id: +stationId,
+      id: stationId,
       userId,
     });
   }
 
   @Get('restaurant/:restaurantId')
   findByRestaurantId(@Param('restaurantId') restaurantId: string) {
-    return this.stationsService.findByRestaurantId(+restaurantId);
+    return this.stationsService.findByRestaurantId(restaurantId);
   }
 
   @Get('store/:storeId')
   findByStoreId(@Param('storeId') storeId: string) {
-    return this.stationsService.findByStoreId(+storeId);
+    return this.stationsService.findByStoreId(storeId);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateStationDto: UpdateStationDto) {
-    return this.stationsService.update(+id, updateStationDto);
+    return this.stationsService.update(id, updateStationDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.stationsService.remove(+id);
+    return this.stationsService.remove(id);
   }
 }

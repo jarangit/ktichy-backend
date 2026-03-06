@@ -1,13 +1,15 @@
 // src/menu/menu.entity.ts
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
+import { nanoid10 } from '../utils/nanoid';
 
 export enum MenuType {
   DRINK = 'DRINK',
@@ -17,8 +19,8 @@ export enum MenuType {
 
 @Entity()
 export class Menu {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
   restaurant: Restaurant;
@@ -34,4 +36,9 @@ export class Menu {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }

@@ -22,10 +22,10 @@ export class OrderStationItemService {
     });
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} orderStationItem`;
   }
-  findByStation(stationId: number) {
+  findByStation(stationId: string) {
     // api for find all order station items by station id
     return this.orderStationItemRepository.find({
       where: { station: { id: stationId } },
@@ -33,11 +33,11 @@ export class OrderStationItemService {
     });
   }
 
-  update(id: number, updateOrderStationItemDto: UpdateOrderStationItemDto) {
+  update(id: string, updateOrderStationItemDto: UpdateOrderStationItemDto) {
     return `This action updates a #${id} orderStationItem`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} orderStationItem`;
   }
 }

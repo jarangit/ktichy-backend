@@ -1,22 +1,24 @@
 // src/restaurants/restaurant.entity.ts
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
+  BeforeInsert,
 } from 'typeorm';
 import { Station } from './station.entity';
 import { User } from './user.entity';
 import { Order } from '../orders/entities/order.entity';
+import { nanoid10 } from '../utils/nanoid';
 
 @Entity()
 export class Restaurant {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @Column()
   name: string;
@@ -25,8 +27,8 @@ export class Restaurant {
   @JoinColumn({ name: 'owner_id' })
   owner: User;
 
-  @Column()
-  owner_id: number;
+  @Column({ type: 'varchar', length: 10 })
+  owner_id: string;
 
   @OneToMany(() => Station, (station) => station.restaurant)
   stations: Station[];
@@ -39,4 +41,9 @@ export class Restaurant {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }

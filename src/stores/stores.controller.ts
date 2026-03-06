@@ -32,23 +32,23 @@ export class StoresController {
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req: any) {
     const userId = req.user?.sub;
-    return this.storesService.findOne(+id, userId);
+    return this.storesService.findOne(id, userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('user/:userId')
   findByUserId(@Param('userId') userId: string) {
-    return this.storesService.findByUserId(+userId);
+    return this.storesService.findByUserId(userId);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateStoreDto: UpdateStoreDto) {
-    return this.storesService.update(+id, updateStoreDto);
+    return this.storesService.update(id, updateStoreDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: any) {
     const userId = req.user?.sub;
-    return this.storesService.remove(+id, userId);
+    return this.storesService.remove(id, userId);
   }
 }

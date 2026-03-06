@@ -33,7 +33,7 @@ export class PairingCodesService {
       code: '12345678', //nanoid10(),
       status: dto.status ?? PairingCodeStatus.PENDING,
       expiresAt: dto.expiresAt,
-      createdBy: Number(dto.createdBy),
+      createdBy: dto.createdBy,
     });
 
     return this.pairingCodeRepository.save(pairingCode);
@@ -43,7 +43,7 @@ export class PairingCodesService {
     return this.pairingCodeRepository.find({ order: { createdAt: 'DESC' } });
   }
 
-  async findOne(id: number): Promise<PairingCode> {
+  async findOne(id: string): Promise<PairingCode> {
     const pairingCode = await this.pairingCodeRepository.findOne({
       where: { id },
     });
@@ -53,7 +53,7 @@ export class PairingCodesService {
     return pairingCode;
   }
 
-  async update(id: number, dto: UpdatePairingCodeDto): Promise<PairingCode> {
+  async update(id: string, dto: UpdatePairingCodeDto): Promise<PairingCode> {
     const pairingCode = await this.findOne(id);
 
     if (dto.code && dto.code !== pairingCode.code) {
@@ -69,7 +69,7 @@ export class PairingCodesService {
     return this.pairingCodeRepository.save(pairingCode);
   }
 
-  async remove(id: number): Promise<{ message: string }> {
+  async remove(id: string): Promise<{ message: string }> {
     const pairingCode = await this.findOne(id);
     await this.pairingCodeRepository.remove(pairingCode);
     return { message: `PairingCode #${id} has been removed` };

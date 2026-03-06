@@ -1,19 +1,21 @@
 // src/users/user.entity.ts
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  BeforeInsert,
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 import { Exclude } from 'class-transformer';
+import { nanoid10 } from '../utils/nanoid';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @Column({ unique: true })
   email: string;
@@ -30,4 +32,9 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }

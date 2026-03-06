@@ -1,4 +1,4 @@
 export class CreateStoreDto {
-  userId: number;
+  userId: string;
   name: string;
 }

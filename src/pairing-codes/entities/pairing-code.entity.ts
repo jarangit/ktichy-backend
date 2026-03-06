@@ -1,6 +1,7 @@
 import { Restaurant } from '@entities/restaurant.entity';
 import { Station } from '@entities/station.entity';
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -8,9 +9,9 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryColumn,
-  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { nanoid10 } from '../../utils/nanoid';
 
 export enum PairingCodeStatus {
   PENDING = 'PENDING',
@@ -21,8 +22,8 @@ export enum PairingCodeStatus {
 @Entity()
 @Index(['storeId'])
 export class PairingCode {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
   store: Restaurant;
@@ -33,11 +34,11 @@ export class PairingCode {
   })
   station: Station;
 
-  @Column({ name: 'store_id', type: 'int' })
-  storeId: number;
+  @Column({ name: 'store_id', type: 'varchar', length: 10 })
+  storeId: string;
 
-  @Column({ name: 'station_id', type: 'int', nullable: true })
-  stationId: number;
+  @Column({ name: 'station_id', type: 'varchar', length: 10, nullable: true })
+  stationId: string;
 
   @Column({ type: 'varchar', length: 32, unique: true })
   code: string;
@@ -52,12 +53,17 @@ export class PairingCode {
   @Column({ name: 'expires_at', type: 'datetime', nullable: true })
   expiresAt?: Date;
 
-  @Column({ name: 'created_by', type: 'int' })
-  createdBy: number;
+  @Column({ name: 'created_by', type: 'varchar', length: 10 })
+  createdBy: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }
