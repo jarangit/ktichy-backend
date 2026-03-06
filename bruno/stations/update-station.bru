@@ -1,0 +1,21 @@
+meta {
+  name: Update Station
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/stations/{{stationId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Grill Station Updated"
+  }
+}

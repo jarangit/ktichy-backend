@@ -1,0 +1,11 @@
+meta {
+  name: Get Orders By Restaurant Id
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/orders/restaurant/{{restaurantId}}
+  body: none
+  auth: none
+}

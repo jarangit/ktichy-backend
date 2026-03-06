@@ -1,0 +1,11 @@
+meta {
+  name: Delete Pairing Code
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/pairing-codes/{{pairingCodeId}}
+  body: none
+  auth: none
+}
