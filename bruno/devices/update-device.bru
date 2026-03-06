@@ -1,0 +1,21 @@
+meta {
+  name: Update Device
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/devices/{{deviceId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Kitchen Tablet Updated"
+  }
+}

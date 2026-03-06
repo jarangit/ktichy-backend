@@ -1,0 +1,11 @@
+meta {
+  name: Get Stations By Restaurant Id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/stations/restaurant/{{restaurantId}}
+  body: none
+  auth: none
+}

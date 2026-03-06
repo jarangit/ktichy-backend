@@ -1,0 +1,21 @@
+meta {
+  name: Update Order Station Item
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/order-station-item/{{orderStationItemId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "DONE"
+  }
+}

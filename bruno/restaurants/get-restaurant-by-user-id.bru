@@ -1,0 +1,15 @@
+meta {
+  name: Get Restaurant By User Id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/restaurants/user/{{userId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
