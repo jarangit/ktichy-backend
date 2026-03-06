@@ -49,4 +49,9 @@ export class ProductsController {
   findByRestaurantId(@Param('restaurantId') restaurantId: number) {
     return this.productService.findByRestaurantId(+restaurantId);
   }
+
+  @Get('store/:storeId')
+  findByStoreId(@Param('storeId') storeId: number) {
+    return this.productService.findByStoreId(+storeId);
+  }
 }

@@ -1,11 +1,11 @@
 meta {
-  name: Update Restaurant
+  name: Update Store
   type: http
   seq: 5
 }
 
 patch {
-  url: {{baseUrl}}/restaurants/{{restaurantId}}
+  url: {{baseUrl}}/stores/{{storeId}}
   body: json
   auth: none
 }
@@ -16,6 +16,6 @@ headers {
 
 body:json {
   {
-    "name": "My Restaurant Updated"
+    "name": "My Store Updated"
   }
 }

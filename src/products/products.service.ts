@@ -4,7 +4,6 @@ import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
-import { stat } from 'fs';
 
 @Injectable()
 export class ProductService {
@@ -13,12 +12,17 @@ export class ProductService {
     private readonly menuRepository: Repository<Product>,
   ) {}
   async create(createMenuDto: CreateMenuDto, userId: number) {
-    const { restaurantId, stationId, name } = createMenuDto;
+    const { stationId } = createMenuDto;
+    const storeId = createMenuDto.storeId ?? createMenuDto.restaurantId;
 
-    const restaurant: any = await this.menuRepository.manager.findOne(
+    if (!storeId) {
+      throw new Error('storeId or restaurantId is required');
+    }
+
+    const store: any = await this.menuRepository.manager.findOne(
       'Restaurant',
       {
-        where: { id: createMenuDto.restaurantId },
+        where: { id: storeId },
       },
     );
     const station: any = await this.menuRepository.manager.findOne('Station', {
@@ -27,26 +31,24 @@ export class ProductService {
     if (!station) {
       throw new Error(`Station #${createMenuDto.stationId} not found`);
     }
-    if (!restaurant) {
-      throw new Error(`Restaurant #${createMenuDto.restaurantId} not found`);
+    if (!store) {
+      throw new Error(`Store #${storeId} not found`);
     }
-    // Check if the user is the owner of the restaurant
-    if (restaurant.owner_id !== userId) {
+    if (store.owner_id !== userId) {
       throw new Error(
-        `User #${userId} is not the owner of restaurant #${restaurantId}`,
+        `User #${userId} is not the owner of store #${storeId}`,
       );
     }
-    if (station.restaurantId !== restaurantId) {
+    if (station.restaurantId !== storeId) {
       throw new Error(
-        `Station #${stationId} does not belong to restaurant #${restaurantId}`,
+        `Station #${stationId} does not belong to store #${storeId}`,
       );
     }
 
-    // Create a new menu with the restaurant relation
     const menu = this.menuRepository.create({
       ...createMenuDto,
-      restaurant,
-      station
+      restaurant: store,
+      station,
     });
     return await this.menuRepository.save(menu);
   }
@@ -70,11 +72,15 @@ export class ProductService {
   }
 
   async findByRestaurantId(restaurantId: number) {
+    return this.findByStoreId(restaurantId);
+  }
+
+  async findByStoreId(storeId: number) {
     const menus = await this.menuRepository.find({
-      where: { restaurant: { id: restaurantId } },
+      where: { restaurant: { id: storeId } },
     });
     if (menus.length === 0) {
-      throw new Error(`No menus found for restaurant #${restaurantId}`);
+      throw new Error(`No menus found for store #${storeId}`);
     }
     return menus;
   }

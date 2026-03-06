@@ -10,7 +10,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderItem } from '../entities/order-item.entity';
-import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
+import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 
 @Injectable()
 export class OrdersService {
@@ -35,16 +35,18 @@ export class OrdersService {
 
     const { products } = createOrderDto;
 
-    // Find restaurant
-    const restaurant = await this.orderRepository.manager.findOne(
+    const storeId = createOrderDto.storeId ?? createOrderDto.restaurantId;
+    if (!storeId) {
+      throw new BadRequestException('storeId or restaurantId is required');
+    }
+
+    const store = await this.orderRepository.manager.findOne(
       'Restaurant',
-      { where: { id: createOrderDto.restaurantId } },
+      { where: { id: storeId } },
     );
 
-    if (!restaurant) {
-      throw new NotFoundException(
-        `Restaurant #${createOrderDto.restaurantId} not found`,
-      );
+    if (!store) {
+      throw new NotFoundException(`Store #${storeId} not found`);
     }
 
     // Process each product in the order
@@ -79,7 +81,7 @@ export class OrdersService {
     // Prepare order data
     const data = {
       orderNumber: createOrderDto.orderNumber,
-      restaurant,
+      restaurant: store,
       items: order.items,
     };
 
@@ -144,14 +146,16 @@ export class OrdersService {
   }
 
   async findByRestaurantId(restaurantId: number): Promise<Order[]> {
+    return this.findByStoreId(restaurantId);
+  }
+
+  async findByStoreId(storeId: number): Promise<Order[]> {
     const orders = await this.orderRepository.find({
-      where: { restaurant: { id: restaurantId } },
+      where: { restaurant: { id: storeId } },
     });
 
     if (!orders.length) {
-      throw new NotFoundException(
-        `No orders found for restaurant #${restaurantId}`,
-      );
+      throw new NotFoundException(`No orders found for store #${storeId}`);
     }
 
     return orders;

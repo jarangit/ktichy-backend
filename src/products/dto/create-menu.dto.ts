@@ -1,5 +1,6 @@
 export class CreateMenuDto {
   name: string;
-  restaurantId: number;
+  restaurantId?: number;
+  storeId?: number;
   stationId: number;
 }

@@ -43,6 +43,11 @@ export class StationsController {
     return this.stationsService.findByRestaurantId(+restaurantId);
   }
 
+  @Get('store/:storeId')
+  findByStoreId(@Param('storeId') storeId: string) {
+    return this.stationsService.findByStoreId(+storeId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateStationDto: UpdateStationDto) {
     return this.stationsService.update(+id, updateStationDto);
