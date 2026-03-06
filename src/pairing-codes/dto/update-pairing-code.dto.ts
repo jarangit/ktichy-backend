@@ -1,9 +1,9 @@
 import { PairingCodeStatus } from '../entities/pairing-code.entity';
 
 export class UpdatePairingCodeDto {
-  storeId?: number;
+  storeId?: string;
   code?: string;
   status?: PairingCodeStatus;
   expiresAt?: Date;
-  createdBy?: number;
+  createdBy?: string;
 }

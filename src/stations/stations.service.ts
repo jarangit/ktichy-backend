@@ -40,7 +40,7 @@ export class StationsService {
     return `This action returns all stations`;
   }
 
-  async findOne({ id, userId }: { id: number; userId?: number }) {
+  async findOne({ id, userId }: { id: string; userId?: string }) {
     if (userId) {
       const station = await this.stationRepository.findOne({
         where: { id, restaurant: { owner_id: userId } },
@@ -52,17 +52,17 @@ export class StationsService {
     }
   }
 
-  async update(id: number, updateStationDto: UpdateStationDto) {
+  async update(id: string, updateStationDto: UpdateStationDto) {
     const storeId = updateStationDto.storeId ?? updateStationDto.restaurantId;
     const payload =
-      typeof storeId === 'number'
+      typeof storeId === 'string'
         ? { ...updateStationDto, restaurantId: storeId }
         : updateStationDto;
 
     await this.stationRepository.update(id, payload);
     return this.stationRepository.findOneBy({ id });
   }
-  async remove(id: number, force: boolean = false) {
+  async remove(id: string, force: boolean = false) {
     const station = await this.stationRepository.findOne({
       where: { id },
       relations: [
@@ -100,11 +100,11 @@ export class StationsService {
       deletedOrderStationItems: station.orderStationItems?.length || 0,
     };
   }
-  async findByRestaurantId(restaurantId: number) {
+  async findByRestaurantId(restaurantId: string) {
     return this.findByStoreId(restaurantId);
   }
 
-  async findByStoreId(storeId: number) {
+  async findByStoreId(storeId: string) {
     return this.stationRepository.find({
       where: { restaurant: { id: storeId } },
     });

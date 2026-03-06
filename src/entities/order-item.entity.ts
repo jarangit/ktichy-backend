@@ -1,21 +1,23 @@
 // src/orders/order-item.entity.ts
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  BeforeInsert,
 } from 'typeorm';
 import { Order } from '../orders/entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
+import { nanoid10 } from '../utils/nanoid';
 
 @Entity()
 export class OrderItem {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @Column({
     type: 'enum',
@@ -49,4 +51,9 @@ export class OrderItem {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }

@@ -30,35 +30,35 @@ export class OrdersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(+id);
+    return this.ordersService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.ordersService.update(+id, updateOrderDto);
+    return this.ordersService.update(id, updateOrderDto);
   }
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string, @Req() req: any) {
     const userId = req.user?.sub;
     return this.ordersService.remove({
-      orderId: +id,
+      orderId: id,
       userId,
     });
   }
 
   @Get('restaurant/:restaurantId')
   findByRestaurantId(@Param('restaurantId') restaurantId: string) {
-    return this.ordersService.findByRestaurantId(+restaurantId);
+    return this.ordersService.findByRestaurantId(restaurantId);
   }
 
   @Get('store/:storeId')
   findByStoreId(@Param('storeId') storeId: string) {
-    return this.ordersService.findByStoreId(+storeId);
+    return this.ordersService.findByStoreId(storeId);
   }
 
   @Get('station/:stationId')
   findByStationId(@Param('stationId') stationId: string) {
-    return this.ordersService.findByStationId(+stationId);
+    return this.ordersService.findByStationId(stationId);
   }
 }

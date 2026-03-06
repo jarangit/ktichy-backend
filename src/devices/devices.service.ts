@@ -28,16 +28,16 @@ export class DevicesService {
     return `This action returns all devices`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} device`;
   }
 
-  update(id: number, updateDeviceDto: UpdateDeviceDto) {
+  update(id: string, updateDeviceDto: UpdateDeviceDto) {
     console.log(updateDeviceDto);
     return `This action updates a #${id} device`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} device`;
   }
 }

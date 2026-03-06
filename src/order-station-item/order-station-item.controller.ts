@@ -29,12 +29,12 @@ export class OrderStationItemController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.orderStationItemService.findOne(+id);
+    return this.orderStationItemService.findOne(id);
   }
 
   @Get('station/:stationId')
   findByStation(@Param('stationId') stationId: string) {
-    return this.orderStationItemService.findByStation(+stationId);
+    return this.orderStationItemService.findByStation(stationId);
   }
 
   @Patch(':id')
@@ -42,11 +42,11 @@ export class OrderStationItemController {
     @Param('id') id: string,
     @Body() updateOrderStationItemDto: UpdateOrderStationItemDto,
   ) {
-    return this.orderStationItemService.update(+id, updateOrderStationItemDto);
+    return this.orderStationItemService.update(id, updateOrderStationItemDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.orderStationItemService.remove(+id);
+    return this.orderStationItemService.remove(id);
   }
 }

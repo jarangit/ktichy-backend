@@ -1,7 +1,7 @@
 // src/stations/station.entity.ts
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
@@ -9,16 +9,18 @@ import {
   JoinColumn,
   OneToMany,
   OneToOne,
+  BeforeInsert,
 } from 'typeorm';
 import { Restaurant } from './restaurant.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 import { PairingCode } from '../pairing-codes/entities/pairing-code.entity';
+import { nanoid10 } from '../utils/nanoid';
 
 @Entity()
 export class Station {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: 'varchar', length: 10 })
+  id: string;
 
   @ManyToOne(() => Restaurant, (restaurant) => restaurant.stations, {
     onDelete: 'CASCADE',
@@ -45,8 +47,8 @@ export class Station {
   )
   orderStationItems: OrderStationItem[];
 
-  @Column()
-  restaurantId: number;
+  @Column({ type: 'varchar', length: 10 })
+  restaurantId: string;
 
   @Column()
   name: string;
@@ -59,4 +61,9 @@ export class Station {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) this.id = nanoid10();
+  }
 }
