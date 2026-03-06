@@ -9,8 +9,8 @@ import { UpdateStationDto } from './dto/update-station.dto';
 import { Station } from '../entities/station.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Product } from 'products/entities/product.entity';
-import { OrderStationItem } from 'order-station-item/entities/order-station-item.entity';
+import { Product } from '../products/entities/product.entity';
+import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 
 
 @Injectable()
@@ -24,7 +24,15 @@ export class StationsService {
     private orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
   create(createStationDto: CreateStationDto) {
-    const station = this.stationRepository.create(createStationDto);
+    const storeId = createStationDto.storeId ?? createStationDto.restaurantId;
+    if (!storeId) {
+      throw new BadRequestException('storeId or restaurantId is required');
+    }
+
+    const station = this.stationRepository.create({
+      ...createStationDto,
+      restaurantId: storeId,
+    });
     return this.stationRepository.save(station);
   }
 
@@ -45,7 +53,13 @@ export class StationsService {
   }
 
   async update(id: number, updateStationDto: UpdateStationDto) {
-    await this.stationRepository.update(id, updateStationDto);
+    const storeId = updateStationDto.storeId ?? updateStationDto.restaurantId;
+    const payload =
+      typeof storeId === 'number'
+        ? { ...updateStationDto, restaurantId: storeId }
+        : updateStationDto;
+
+    await this.stationRepository.update(id, payload);
     return this.stationRepository.findOneBy({ id });
   }
   async remove(id: number, force: boolean = false) {
@@ -87,8 +101,12 @@ export class StationsService {
     };
   }
   async findByRestaurantId(restaurantId: number) {
+    return this.findByStoreId(restaurantId);
+  }
+
+  async findByStoreId(storeId: number) {
     return this.stationRepository.find({
-      where: { restaurant: { id: restaurantId } },
+      where: { restaurant: { id: storeId } },
     });
   }
 }

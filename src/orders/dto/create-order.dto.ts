@@ -1,4 +1,4 @@
-import { IsInt, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -8,8 +8,14 @@ export enum OrderStatus {
 }
 
 export class CreateOrderDto {
+  @IsOptional()
   @IsInt()
-  restaurantId: number;
+  restaurantId?: number;
+
+  @IsOptional()
+  @IsInt()
+  storeId?: number;
+
   @IsString()
   orderNumber: string;
 

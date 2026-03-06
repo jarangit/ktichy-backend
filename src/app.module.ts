@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SentryModule } from '@sentry/nestjs/setup';
 import { UsersModule } from './users/users.module';
-import { RestaurantsModule } from './restaurants/restaurants.module';
+import { StoresModule } from './stores/stores.module';
 import { StationsModule } from './stations/stations.module';
 import { OrdersModule } from './orders/orders.module';
 import { AuthModule } from './auth/auth.module';
@@ -31,7 +31,7 @@ const infrastructureModules = [
 
 const featureModules = [
   UsersModule,
-  RestaurantsModule,
+  StoresModule,
   StationsModule,
   ProductsModule,
   OrdersModule,

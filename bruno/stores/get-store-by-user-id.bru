@@ -1,11 +1,11 @@
 meta {
-  name: Delete Restaurant
+  name: Get Store By User Id
   type: http
-  seq: 6
+  seq: 4
 }
 
-delete {
-  url: {{baseUrl}}/restaurants/{{restaurantId}}
+get {
+  url: {{baseUrl}}/stores/user/{{userId}}
   body: none
   auth: none
 }

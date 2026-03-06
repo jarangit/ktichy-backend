@@ -1,11 +1,11 @@
 meta {
-  name: Create Restaurant
+  name: Create Store
   type: http
   seq: 1
 }
 
 post {
-  url: {{baseUrl}}/restaurants
+  url: {{baseUrl}}/stores
   body: json
   auth: none
 }
@@ -16,7 +16,7 @@ headers {
 
 body:json {
   {
-    "name": "My Restaurant",
-    "ownerId": {{userId}}
+    "name": "My Store",
+    "userId": {{userId}}
   }
 }

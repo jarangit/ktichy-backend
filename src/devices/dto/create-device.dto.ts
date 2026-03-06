@@ -1,4 +1,4 @@
-import { Restaurant } from 'restaurants/entities/restaurant.entity';
+import { Restaurant } from '../../entities/restaurant.entity';
 
 export class CreateDeviceDto {
   deviceName: string;

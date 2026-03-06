@@ -1,5 +1,6 @@
 export class CreateStationDto {
-  restaurantId: number;
+  restaurantId?: number;
+  storeId?: number;
   name: string;
   color?: string;
 }

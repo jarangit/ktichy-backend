@@ -52,6 +52,11 @@ export class OrdersController {
     return this.ordersService.findByRestaurantId(+restaurantId);
   }
 
+  @Get('store/:storeId')
+  findByStoreId(@Param('storeId') storeId: string) {
+    return this.ordersService.findByStoreId(+storeId);
+  }
+
   @Get('station/:stationId')
   findByStationId(@Param('stationId') stationId: string) {
     return this.ordersService.findByStationId(+stationId);
