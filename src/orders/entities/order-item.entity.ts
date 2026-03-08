@@ -1,4 +1,3 @@
-// src/orders/order-item.entity.ts
 import {
   Entity,
   PrimaryColumn,
@@ -9,10 +8,10 @@ import {
   OneToMany,
   BeforeInsert,
 } from 'typeorm';
-import { Order } from '../orders/entities/order.entity';
-import { Product } from '../products/entities/product.entity';
-import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
-import { nanoid10 } from '../utils/nanoid';
+import { Order } from './order.entity';
+import { Product } from '../../products/entities/product.entity';
+import { OrderStationItem } from '../../order-station-item/entities/order-station-item.entity';
+import { nanoid10 } from '../../utils/nanoid';
 
 @Entity()
 export class OrderItem {

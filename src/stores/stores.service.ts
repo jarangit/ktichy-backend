@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Store } from '../entities/store.entity';
+import { Store } from './entities/store.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -19,6 +19,12 @@ export class StoresService {
       where: { owner_id: userId },
     });
 
+    if (existing) {
+      throw new BadRequestException({
+        message: 'You already have a store',
+        errorCode: 'STORE_ALREADY_EXISTS',
+      });
+    }
     const store = this.storeRepository.create({
       name,
       owner_id: userId,
@@ -60,7 +66,10 @@ export class StoresService {
     });
 
     if (!store) {
-      throw new BadRequestException('Store not found');
+      throw new BadRequestException({
+        message: 'Store not found',
+        errorCode: 'STORE_NOT_FOUND',
+      });
     }
 
     Object.assign(store, updateStoreDto);

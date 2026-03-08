@@ -9,6 +9,7 @@ import { LoggingInterceptor } from 'midleware/logging.interceptor';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // dev branch
+  app.setGlobalPrefix('api/v1');
   app.enableCors({
     origin: process.env.CLIENT_URL, // ✅ ใส่ origin ของ frontend
     credentials: true, // ถ้ามี cookie/session
@@ -19,6 +20,6 @@ async function bootstrap() {
     new LoggingInterceptor(),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 8080);
 }
 bootstrap();

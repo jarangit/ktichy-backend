@@ -1,4 +1,4 @@
-import { Restaurant } from '@entities/restaurant.entity';
+import { Store } from '../../stores/entities/store.entity';
 import {
   BeforeInsert,
   Column,
@@ -13,8 +13,8 @@ export class Device {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
-  store: Restaurant;
+  @ManyToOne(() => Store, { onDelete: 'CASCADE' })
+  store: Store;
 
   @Column()
   deviceName: string;

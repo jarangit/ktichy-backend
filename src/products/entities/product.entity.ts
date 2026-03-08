@@ -1,6 +1,6 @@
 // src/menu/menu.entity.ts
-import { Restaurant } from '../../entities/restaurant.entity';
-import { Station } from '../../entities/station.entity';
+import { Store } from '../../stores/entities/store.entity';
+import { Station } from '../../stations/entities/station.entity';
 import {
   Entity,
   PrimaryColumn,
@@ -17,8 +17,8 @@ export class Product {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
-  restaurant: Restaurant;
+  @ManyToOne(() => Store, { onDelete: 'CASCADE' })
+  restaurant: Store;
 
   @ManyToOne(() => Station, (station) => station.products, {
     nullable: true,
