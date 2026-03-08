@@ -38,11 +38,6 @@ export class StationsController {
     });
   }
 
-  @Get('restaurant/:restaurantId')
-  findByRestaurantId(@Param('restaurantId') restaurantId: string) {
-    return this.stationsService.findByRestaurantId(restaurantId);
-  }
-
   @Get('store/:storeId')
   findByStoreId(@Param('storeId') storeId: string) {
     return this.stationsService.findByStoreId(storeId);

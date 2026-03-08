@@ -2,7 +2,6 @@ import { PartialType } from '@nestjs/mapped-types';
 import { CreateStationDto } from './create-station.dto';
 
 export class UpdateStationDto extends PartialType(CreateStationDto) {
-  restaurantId?: string;
   storeId?: string;
   name?: string;
   color?: string;

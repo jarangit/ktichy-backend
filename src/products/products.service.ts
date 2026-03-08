@@ -14,10 +14,10 @@ export class ProductService {
   ) {}
   async create(createMenuDto: CreateMenuDto, userId: string) {
     const { stationId } = createMenuDto;
-    const storeId = createMenuDto.storeId ?? createMenuDto.restaurantId;
+    const { storeId } = createMenuDto;
 
     if (!storeId) {
-      throw new Error('storeId or restaurantId is required');
+      throw new Error('storeId is required');
     }
 
     const store: any = await this.menuRepository.manager.findOne(Store, {
@@ -35,7 +35,7 @@ export class ProductService {
     if (store.owner_id !== userId) {
       throw new Error(`User #${userId} is not the owner of store #${storeId}`);
     }
-    if (station.restaurantId !== storeId) {
+    if (station.storeId !== storeId) {
       throw new Error(
         `Station #${stationId} does not belong to store #${storeId}`,
       );
@@ -43,7 +43,7 @@ export class ProductService {
 
     const menu = this.menuRepository.create({
       ...createMenuDto,
-      restaurant: store,
+      store,
       station,
     });
     return await this.menuRepository.save(menu);
@@ -67,13 +67,9 @@ export class ProductService {
     return { message: `Menu #${id} has been removed` };
   }
 
-  async findByRestaurantId(restaurantId: string) {
-    return this.findByStoreId(restaurantId);
-  }
-
   async findByStoreId(storeId: string) {
     const menus = await this.menuRepository.find({
-      where: { restaurant: { id: storeId } },
+      where: { store: { id: storeId } },
     });
     if (menus.length === 0) {
       throw new Error(`No menus found for store #${storeId}`);

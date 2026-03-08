@@ -24,8 +24,8 @@ export class Station {
   @ManyToOne(() => Store, (store) => store.stations, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'restaurantId' })
-  restaurant: Store;
+  @JoinColumn({ name: 'storeId' })
+  store: Store;
 
   @OneToMany(() => Product, (product) => product.station, {
     cascade: true,
@@ -47,7 +47,7 @@ export class Station {
   orderStationItems: OrderStationItem[];
 
   @Column({ type: 'varchar', length: 10 })
-  restaurantId: string;
+  storeId: string;
 
   @Column()
   name: string;

@@ -24,7 +24,7 @@ export class User {
   passwordHash: string;
 
   @OneToMany(() => Store, (store) => store.owner)
-  restaurants: Store[];
+  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;

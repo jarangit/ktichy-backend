@@ -1,4 +1,9 @@
-import { CallHandler, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { tap } from 'rxjs/operators';
 import { nanoid16 } from '../utils/nanoid';
 
@@ -36,7 +41,6 @@ export class LoggingInterceptor {
 
     const userId = req.user?.sub ?? req.user?.userId;
     const storeId = req.user?.storeId ?? req.user?.store_id;
-    const restaurantId = req.user?.restaurantId ?? req.user?.restaurant_id;
 
     const incomingRequestId =
       req.headers?.['x-request-id'] || req.headers?.['x-correlation-id'];
@@ -57,34 +61,31 @@ export class LoggingInterceptor {
     const userAgentSuffix = userAgent ? ` ua=${String(userAgent)}` : '';
     const userSuffix = userId ? ` userId=${userId}` : '';
     const storeSuffix = storeId ? ` storeId=${storeId}` : '';
-    const restaurantSuffix = restaurantId ? ` restaurantId=${restaurantId}` : '';
 
     this.logger.log(
-      `[REQ] ts=${requestAt} ${method} ${url}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${restaurantSuffix}${userAgentSuffix}`,
+      `[REQ] ts=${requestAt} ${method} ${url}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${userAgentSuffix}`,
     );
-    return next
-      .handle()
-      .pipe(
-        tap({
-          next: () => {
-            const durationMs = Date.now() - now;
-            const statusCode = res?.statusCode;
-            const responseAt = new Date().toISOString();
-            this.logger.log(
-              `[RES] ts=${responseAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${restaurantSuffix}`,
-            );
-          },
-          error: (err) => {
-            const durationMs = Date.now() - now;
-            const statusCode = res?.statusCode;
-            const message = err?.message ?? String(err);
-            const errorAt = new Date().toISOString();
-            this.logger.error(
-              `[ERR] ts=${errorAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${restaurantSuffix} msg=${message}`,
-              err?.stack,
-            );
-          },
-        }),
-      );
+    return next.handle().pipe(
+      tap({
+        next: () => {
+          const durationMs = Date.now() - now;
+          const statusCode = res?.statusCode;
+          const responseAt = new Date().toISOString();
+          this.logger.log(
+            `[RES] ts=${responseAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}`,
+          );
+        },
+        error: (err) => {
+          const durationMs = Date.now() - now;
+          const statusCode = res?.statusCode;
+          const message = err?.message ?? String(err);
+          const errorAt = new Date().toISOString();
+          this.logger.error(
+            `[ERR] ts=${errorAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix} msg=${message}`,
+            err?.stack,
+          );
+        },
+      }),
+    );
   }
 }

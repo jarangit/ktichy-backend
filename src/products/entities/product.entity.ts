@@ -18,7 +18,7 @@ export class Product {
   id: string;
 
   @ManyToOne(() => Store, { onDelete: 'CASCADE' })
-  restaurant: Store;
+  store: Store;
 
   @ManyToOne(() => Station, (station) => station.products, {
     nullable: true,

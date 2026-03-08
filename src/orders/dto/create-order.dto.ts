@@ -10,10 +10,6 @@ export enum OrderStatus {
 export class CreateOrderDto {
   @IsOptional()
   @IsString()
-  restaurantId?: string;
-
-  @IsOptional()
-  @IsString()
   storeId?: string;
 
   @IsString()

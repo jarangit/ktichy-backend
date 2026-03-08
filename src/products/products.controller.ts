@@ -45,11 +45,6 @@ export class ProductsController {
     return this.productService.remove(id);
   }
 
-  @Get('restaurant/:restaurantId')
-  findByRestaurantId(@Param('restaurantId') restaurantId: string) {
-    return this.productService.findByRestaurantId(restaurantId);
-  }
-
   @Get('store/:storeId')
   findByStoreId(@Param('storeId') storeId: string) {
     return this.productService.findByStoreId(storeId);

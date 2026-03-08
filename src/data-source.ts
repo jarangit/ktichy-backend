@@ -1,6 +1,7 @@
 // src/data-source.ts
 import { DataSource } from 'typeorm';
 import 'dotenv/config';
+
 export const AppDataSource = new DataSource({
   type: 'mysql',
   host: process.env.DB_HOST, // ✅ ต้องใช้ 'mysql'
@@ -8,8 +9,8 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  migrations: ['dist/db/migrations/*{.js}'],
-  entities: ['dist/**/*.entity.js'],
+  migrations: [`${__dirname}/migrations/*{.ts,.js}`],
+  entities: [`${__dirname}/**/*.entity{.ts,.js}`],
   synchronize: false,
   logging: true,
   logger: 'advanced-console',
