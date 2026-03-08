@@ -36,9 +36,9 @@ export class OrdersService {
 
     const { products } = createOrderDto;
 
-    const storeId = createOrderDto.storeId ?? createOrderDto.restaurantId;
+    const { storeId } = createOrderDto;
     if (!storeId) {
-      throw new BadRequestException('storeId or restaurantId is required');
+      throw new BadRequestException('storeId is required');
     }
 
     const store = await this.orderRepository.manager.findOne(Store, {
@@ -81,7 +81,7 @@ export class OrdersService {
     // Prepare order data
     const data = {
       orderNumber: createOrderDto.orderNumber,
-      restaurant: store,
+      store,
       items: order.items,
     };
 
@@ -124,16 +124,11 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({
       where: {
         id: orderId,
-        restaurant: {
+        store: {
           owner: { id: userId },
         },
       },
-      relations: [
-        'restaurant',
-        'restaurant.owner',
-        'items',
-        'items.stationItems',
-      ],
+      relations: ['store', 'store.owner', 'items', 'items.stationItems'],
     });
 
     if (!order) {
@@ -145,13 +140,9 @@ export class OrdersService {
     return { message: `Order #${orderId} has been removed` };
   }
 
-  async findByRestaurantId(restaurantId: string): Promise<Order[]> {
-    return this.findByStoreId(restaurantId);
-  }
-
   async findByStoreId(storeId: string): Promise<Order[]> {
     const orders = await this.orderRepository.find({
-      where: { restaurant: { id: storeId } },
+      where: { store: { id: storeId } },
     });
 
     if (!orders.length) {

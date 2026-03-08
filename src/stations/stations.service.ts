@@ -23,14 +23,14 @@ export class StationsService {
     private orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
   create(createStationDto: CreateStationDto) {
-    const storeId = createStationDto.storeId ?? createStationDto.restaurantId;
+    const { storeId } = createStationDto;
     if (!storeId) {
-      throw new BadRequestException('storeId or restaurantId is required');
+      throw new BadRequestException('storeId is required');
     }
 
     const station = this.stationRepository.create({
       ...createStationDto,
-      restaurantId: storeId,
+      storeId,
     });
     return this.stationRepository.save(station);
   }
@@ -42,7 +42,7 @@ export class StationsService {
   async findOne({ id, userId }: { id: string; userId?: string }) {
     if (userId) {
       const station = await this.stationRepository.findOne({
-        where: { id, restaurant: { owner_id: userId } },
+        where: { id, store: { owner_id: userId } },
       });
       if (!station) {
         throw new Error(`Station with ID ${id} not found for user ${userId}`);
@@ -52,11 +52,7 @@ export class StationsService {
   }
 
   async update(id: string, updateStationDto: UpdateStationDto) {
-    const storeId = updateStationDto.storeId ?? updateStationDto.restaurantId;
-    const payload =
-      typeof storeId === 'string'
-        ? { ...updateStationDto, restaurantId: storeId }
-        : updateStationDto;
+    const payload = updateStationDto;
 
     await this.stationRepository.update(id, payload);
     return this.stationRepository.findOneBy({ id });
@@ -99,13 +95,9 @@ export class StationsService {
       deletedOrderStationItems: station.orderStationItems?.length || 0,
     };
   }
-  async findByRestaurantId(restaurantId: string) {
-    return this.findByStoreId(restaurantId);
-  }
-
   async findByStoreId(storeId: string) {
     return this.stationRepository.find({
-      where: { restaurant: { id: storeId } },
+      where: { store: { id: storeId } },
     });
   }
 }

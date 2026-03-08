@@ -45,7 +45,7 @@ export class Order {
   @ManyToOne(() => Store, (store) => store.orders, {
     onDelete: 'CASCADE',
   })
-  restaurant: Store;
+  store: Store;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
     cascade: true,

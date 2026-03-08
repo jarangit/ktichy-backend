@@ -22,17 +22,17 @@ export class Store {
   @Column()
   name: string;
 
-  @ManyToOne(() => User, (user) => user.restaurants, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.stores, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'owner_id' })
   owner: User;
 
   @Column({ type: 'varchar', length: 10 })
   owner_id: string;
 
-  @OneToMany(() => Station, (station) => station.restaurant)
+  @OneToMany(() => Station, (station) => station.store)
   stations: Station[];
 
-  @OneToMany(() => Order, (order) => order.restaurant)
+  @OneToMany(() => Order, (order) => order.store)
   orders: Order[];
 
   @CreateDateColumn()

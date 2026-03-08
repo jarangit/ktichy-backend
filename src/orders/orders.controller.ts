@@ -47,11 +47,6 @@ export class OrdersController {
     });
   }
 
-  @Get('restaurant/:restaurantId')
-  findByRestaurantId(@Param('restaurantId') restaurantId: string) {
-    return this.ordersService.findByRestaurantId(restaurantId);
-  }
-
   @Get('store/:storeId')
   findByStoreId(@Param('storeId') storeId: string) {
     return this.ordersService.findByStoreId(storeId);
