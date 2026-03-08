@@ -1,4 +1,3 @@
-// src/restaurants/restaurant.entity.ts
 import {
   Entity,
   PrimaryColumn,
@@ -10,13 +9,13 @@ import {
   JoinColumn,
   BeforeInsert,
 } from 'typeorm';
-import { Station } from './station.entity';
-import { User } from './user.entity';
-import { Order } from '../orders/entities/order.entity';
-import { nanoid10 } from '../utils/nanoid';
+import { Station } from '../../stations/entities/station.entity';
+import { User } from '../../users/entities/user.entity';
+import { Order } from '../../orders/entities/order.entity';
+import { nanoid10 } from '../../utils/nanoid';
 
 @Entity()
-export class Restaurant {
+export class Store {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 

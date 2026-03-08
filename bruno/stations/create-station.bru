@@ -7,16 +7,21 @@ meta {
 post {
   url: {{baseUrl}}/stations
   body: json
-  auth: none
+  auth: bearer
 }
 
 headers {
   Content-Type: application/json
 }
 
+auth:bearer {
+  token: {{token}}
+}
+
 body:json {
   {
-    "name": "Grill Station",
-    "storeId": {{storeId}}
+    "name": "B Station",
+    "storeId": "DHj9kk9qYq",
+    "color":"test"
   }
 }

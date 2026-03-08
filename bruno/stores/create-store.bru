@@ -7,16 +7,25 @@ meta {
 post {
   url: {{baseUrl}}/stores
   body: json
-  auth: none
+  auth: bearer
 }
 
 headers {
   Content-Type: application/json
+  : 
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 body:json {
   {
     "name": "My Store",
-    "userId": {{userId}}
+    "userId": "qi4pyjUlUo"
   }
+}
+
+vars:pre-request {
+  userId: qi4pyjUlUo
 }

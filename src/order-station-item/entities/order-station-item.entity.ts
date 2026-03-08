@@ -1,5 +1,5 @@
-import { OrderItem } from '@entities/order-item.entity';
-import { Station } from '@entities/station.entity';
+import { OrderItem } from '../../orders/entities/order-item.entity';
+import { Station } from '../../stations/entities/station.entity';
 import {
   Entity,
   PrimaryColumn,

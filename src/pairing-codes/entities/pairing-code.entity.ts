@@ -1,5 +1,5 @@
-import { Restaurant } from '@entities/restaurant.entity';
-import { Station } from '@entities/station.entity';
+import { Store } from '../../stores/entities/store.entity';
+import { Station } from '../../stations/entities/station.entity';
 import {
   BeforeInsert,
   Column,
@@ -25,8 +25,8 @@ export class PairingCode {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
-  store: Restaurant;
+  @ManyToOne(() => Store, { onDelete: 'CASCADE' })
+  store: Store;
 
   @OneToOne(() => Station, (station) => station.pairingCodes, {
     nullable: true,

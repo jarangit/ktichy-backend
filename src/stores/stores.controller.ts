@@ -14,10 +14,11 @@ import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
-@Controller(['stores', 'restaurants'])
+@Controller(['stores'])
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createStoreDto: CreateStoreDto) {
     return this.storesService.create(createStoreDto);

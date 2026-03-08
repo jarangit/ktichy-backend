@@ -42,10 +42,7 @@ const featureModules = [
 ];
 
 @Module({
-  imports: [
-    ...infrastructureModules,
-    ...featureModules,
-  ],
+  imports: [...infrastructureModules, ...featureModules],
   controllers: [AppController],
   providers: [AppService],
 })

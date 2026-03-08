@@ -8,8 +8,8 @@ import {
   OneToMany,
   BeforeInsert,
 } from 'typeorm';
-import { OrderItem } from '../../entities/order-item.entity';
-import { Restaurant } from '../../entities/restaurant.entity';
+import { OrderItem } from './order-item.entity';
+import { Store } from '../../stores/entities/store.entity';
 import { nanoid10 } from '../../utils/nanoid';
 
 export enum OrderStatus {
@@ -42,10 +42,10 @@ export class Order {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.orders, {
+  @ManyToOne(() => Store, (store) => store.orders, {
     onDelete: 'CASCADE',
   })
-  restaurant: Restaurant;
+  restaurant: Store;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
     cascade: true,

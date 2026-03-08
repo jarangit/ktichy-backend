@@ -4,6 +4,7 @@ import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
+import { Store } from '../stores/entities/store.entity';
 
 @Injectable()
 export class ProductService {
@@ -19,12 +20,9 @@ export class ProductService {
       throw new Error('storeId or restaurantId is required');
     }
 
-    const store: any = await this.menuRepository.manager.findOne(
-      'Restaurant',
-      {
-        where: { id: storeId },
-      },
-    );
+    const store: any = await this.menuRepository.manager.findOne(Store, {
+      where: { id: storeId },
+    });
     const station: any = await this.menuRepository.manager.findOne('Station', {
       where: { id: createMenuDto.stationId },
     });
@@ -35,9 +33,7 @@ export class ProductService {
       throw new Error(`Store #${storeId} not found`);
     }
     if (store.owner_id !== userId) {
-      throw new Error(
-        `User #${userId} is not the owner of store #${storeId}`,
-      );
+      throw new Error(`User #${userId} is not the owner of store #${storeId}`);
     }
     if (station.restaurantId !== storeId) {
       throw new Error(

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
-import { User } from '../entities/user.entity';
+import { User } from './entities/user.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
