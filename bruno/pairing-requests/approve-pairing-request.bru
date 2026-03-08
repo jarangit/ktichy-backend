@@ -1,11 +1,11 @@
 meta {
-  name: Create Pairing Code
+  name: Approve Pairing Request
   type: http
   seq: 1
 }
 
-post {
-  url: {{baseUrl}}/pairing-codes
+patch {
+  url: {{baseUrl}}/pairing-requests/{{pairingRequestId}}/approve
   body: json
   auth: none
 }
@@ -17,8 +17,7 @@ headers {
 
 body:json {
   {
-    "storeId": {{storeId}},
     "stationId": {{stationId}},
-    "ttlMinutes": 10
+    "alias": "hot-kitchen-display-1"
   }
 }

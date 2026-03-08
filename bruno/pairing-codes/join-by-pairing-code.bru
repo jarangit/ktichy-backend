@@ -1,11 +1,11 @@
 meta {
-  name: Create Device
+  name: Join By Pairing Code
   type: http
-  seq: 1
+  seq: 6
 }
 
 post {
-  url: {{baseUrl}}/devices
+  url: {{baseUrl}}/pairing-codes/{{pairingCode}}/join
   body: json
   auth: none
 }
@@ -19,8 +19,7 @@ body:json {
     "deviceId": "{{deviceExternalId}}",
     "deviceName": "Kitchen Tablet",
     "fingerprint": "fp_local_001",
-    "storeId": {{storeId}},
-    "stationId": {{stationId}},
-    "appVersion": "1.0.0"
+    "appVersion": "1.0.0",
+    "alias": "hot-kitchen-display-1"
   }
 }

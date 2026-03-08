@@ -1,9 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
+import { nanoid10 } from '../utils/nanoid';
 
 @Injectable()
 export class ProductService {
@@ -16,36 +21,36 @@ export class ProductService {
     const storeId = createMenuDto.storeId ?? createMenuDto.restaurantId;
 
     if (!storeId) {
-      throw new Error('storeId or restaurantId is required');
+      throw new BadRequestException('storeId or restaurantId is required');
     }
 
-    const store: any = await this.menuRepository.manager.findOne(
-      'Restaurant',
-      {
-        where: { id: storeId },
-      },
-    );
+    const store: any = await this.menuRepository.manager.findOne('Restaurant', {
+      where: { id: storeId },
+    });
     const station: any = await this.menuRepository.manager.findOne('Station', {
       where: { id: createMenuDto.stationId },
     });
     if (!station) {
-      throw new Error(`Station #${createMenuDto.stationId} not found`);
+      throw new NotFoundException(
+        `Station #${createMenuDto.stationId} not found`,
+      );
     }
     if (!store) {
-      throw new Error(`Store #${storeId} not found`);
+      throw new NotFoundException(`Store #${storeId} not found`);
     }
     if (store.owner_id !== userId) {
-      throw new Error(
+      throw new BadRequestException(
         `User #${userId} is not the owner of store #${storeId}`,
       );
     }
     if (station.restaurantId !== storeId) {
-      throw new Error(
+      throw new BadRequestException(
         `Station #${stationId} does not belong to store #${storeId}`,
       );
     }
 
     const menu = this.menuRepository.create({
+      id: nanoid10(),
       ...createMenuDto,
       restaurant: store,
       station,
@@ -80,7 +85,7 @@ export class ProductService {
       where: { restaurant: { id: storeId } },
     });
     if (menus.length === 0) {
-      throw new Error(`No menus found for store #${storeId}`);
+      throw new NotFoundException(`No menus found for store #${storeId}`);
     }
     return menus;
   }

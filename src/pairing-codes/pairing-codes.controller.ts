@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CreatePairingCodeDto } from './dto/create-pairing-code.dto';
+import { JoinPairingCodeDto } from './dto/join-pairing-code.dto';
 import { UpdatePairingCodeDto } from './dto/update-pairing-code.dto';
 import { PairingCodesService } from './pairing-codes.service';
 import { JwtAuthGuard } from 'auth/jwt-auth-guard';
@@ -26,6 +27,11 @@ export class PairingCodesController {
       ...createPairingCodeDto,
       createdBy: userId,
     });
+  }
+
+  @Post(':code/join')
+  joinByCode(@Param('code') code: string, @Body() joinDto: JoinPairingCodeDto) {
+    return this.pairingCodesService.joinByCode(code, joinDto);
   }
 
   @Get()

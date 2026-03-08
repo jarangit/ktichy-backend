@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateDeviceDto, CreateDeviceResponse } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { Repository } from 'typeorm/repository/Repository';
-import { Device } from './entities/device.entity';
+import { Device, DeviceStatus } from './entities/device.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -14,13 +14,29 @@ export class DevicesService {
   async create(
     createDeviceDto: CreateDeviceDto,
   ): Promise<CreateDeviceResponse> {
-    const { deviceName, fingerprint, storeId, stationId } = createDeviceDto;
-    if (!deviceName || !fingerprint || !storeId || !stationId) {
-      throw new BadRequestException(
-        'Device name or fingerprint cannot be empty',
-      );
+    const storeId = createDeviceDto.storeId ?? createDeviceDto.restaurantId;
+    if (!createDeviceDto.deviceId) {
+      throw new BadRequestException('deviceId is required');
     }
-    const device = this.deviceRepository.create({ ...createDeviceDto });
+
+    const existing = await this.deviceRepository.findOne({
+      where: { deviceId: createDeviceDto.deviceId },
+    });
+
+    if (existing) {
+      throw new BadRequestException('deviceId already exists');
+    }
+
+    const device = this.deviceRepository.create({
+      ...createDeviceDto,
+      storeId,
+      status: storeId ? DeviceStatus.PAIRED : DeviceStatus.UNPAIRED,
+      lastSeenAt: new Date(),
+      store: storeId ? ({ id: storeId } as any) : undefined,
+      station: createDeviceDto.stationId
+        ? ({ id: createDeviceDto.stationId } as any)
+        : undefined,
+    });
     return await this.deviceRepository.save(device);
   }
 

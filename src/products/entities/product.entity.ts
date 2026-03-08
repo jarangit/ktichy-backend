@@ -40,6 +40,6 @@ export class Product {
 
   @BeforeInsert()
   generateId() {
-    if (!this.id) this.id = nanoid10();
+    if (!this.id || !this.id.trim()) this.id = nanoid10();
   }
 }

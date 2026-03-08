@@ -13,6 +13,7 @@ import { ProductsModule } from './products/products.module';
 import { OrderStationItemModule } from './order-station-item/order-station-item.module';
 import { DevicesModule } from './devices/devices.module';
 import { PairingCodesModule } from './pairing-codes/pairing-codes.module';
+import { PairingRequestsModule } from './pairing-requests/pairing-requests.module';
 
 const infrastructureModules = [
   TypeOrmModule.forRoot({
@@ -39,13 +40,11 @@ const featureModules = [
   OrderStationItemModule,
   DevicesModule,
   PairingCodesModule,
+  PairingRequestsModule,
 ];
 
 @Module({
-  imports: [
-    ...infrastructureModules,
-    ...featureModules,
-  ],
+  imports: [...infrastructureModules, ...featureModules],
   controllers: [AppController],
   providers: [AppService],
 })

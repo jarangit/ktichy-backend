@@ -18,6 +18,8 @@ describe('DevicesService', () => {
   let service: DevicesService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DevicesService,
@@ -36,67 +38,56 @@ describe('DevicesService', () => {
   });
 
   it('should be create', async () => {
+    mockDeviceRepository.findOne.mockResolvedValue(null);
     mockDeviceRepository.create.mockReturnValue({
+      deviceId: 'dv_999',
       deviceName: '123',
       fingerprint: 'fingerprint',
     });
     mockDeviceRepository.save.mockResolvedValue({
       id: '1',
+      deviceId: 'dv_999',
       deviceName: '123',
       fingerprint: 'fingerprint',
     });
     const result = await service.create({
+      deviceId: 'dv_999',
       deviceName: '123',
       fingerprint: 'fingerprint',
       storeId: 'storeId',
       stationId: 'stationId',
     });
     expect(result.id).toBe('1');
+    expect(result.deviceId).toBe('dv_999');
     expect(result.deviceName).toBe('123');
     expect(result.fingerprint).toBe('fingerprint');
   });
 
-  it.each([
-    {
-      field: 'deviceName',
-      data: {
-        deviceName: '',
-        fingerprint: '123',
-        storeId: 'storeId',
-        stationId: 'stationId',
-      },
-    },
-    {
-      field: 'fingerprint',
-      data: {
-        deviceName: 'data',
-        fingerprint: '',
-        storeId: 'storeId',
-        stationId: 'stationId',
-      },
-    },
-    {
-      field: 'storeId',
-      data: {
-        deviceName: 'data',
-        fingerprint: '123',
-        storeId: '',
-        stationId: 'stationId',
-      },
-    },
-    {
-      field: 'stationId',
-      data: {
+  it('should throw BadRequestException when deviceId is missing', async () => {
+    await expect(
+      service.create({
         deviceName: 'data',
         fingerprint: '123',
         storeId: 'storeId',
-        stationId: '',
-      },
-    },
-  ])(
-    'should throw BadRequestException when $field is empty',
-    async ({ data }) => {
-      await expect(service.create(data)).rejects.toThrow(BadRequestException);
-    },
-  );
+        stationId: 'stationId',
+      } as any),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('should throw BadRequestException when deviceId already exists', async () => {
+    mockDeviceRepository.findOne.mockResolvedValue({
+      id: '1',
+      deviceId: 'dv_999',
+    });
+
+    await expect(
+      service.create({
+        deviceId: 'dv_999',
+        deviceName: 'data',
+        fingerprint: '123',
+        storeId: 'storeId',
+        stationId: 'stationId',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
 });

@@ -1,14 +1,19 @@
 import { Restaurant } from '../../entities/restaurant.entity';
 
 export class CreateDeviceDto {
-  deviceName: string;
-  fingerprint: string;
-  storeId: string;
-  stationId: string;
+  deviceId: string;
+  deviceName?: string;
+  fingerprint?: string;
+  appVersion?: string;
+  alias?: string;
+  storeId?: string;
+  restaurantId?: string;
+  stationId?: string;
 }
 export interface CreateDeviceResponse {
   id: string;
-  deviceName: string;
-  fingerprint: string;
-  store: Restaurant;
+  deviceId: string;
+  deviceName?: string;
+  fingerprint?: string;
+  store?: Restaurant;
 }
