@@ -11,7 +11,7 @@ import {
   OneToOne,
   BeforeInsert,
 } from 'typeorm';
-import { Restaurant } from './restaurant.entity';
+import { Store } from './store.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 import { PairingCode } from '../pairing-codes/entities/pairing-code.entity';
@@ -22,11 +22,11 @@ export class Station {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.stations, {
+  @ManyToOne(() => Store, (store) => store.stations, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'restaurantId' })
-  restaurant: Restaurant;
+  @JoinColumn({ name: 'storeId' })
+  store: Store;
 
   @OneToMany(() => Product, (product) => product.station, {
     cascade: true,
@@ -48,7 +48,11 @@ export class Station {
   orderStationItems: OrderStationItem[];
 
   @Column({ type: 'varchar', length: 10 })
-  restaurantId: string;
+  storeId: string;
+
+  get restaurantId(): string {
+    return this.storeId;
+  }
 
   @Column()
   name: string;

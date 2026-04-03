@@ -9,6 +9,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { nanoid10 } from '../utils/nanoid';
+import { Store } from '../entities/store.entity';
+import { Station } from '../entities/station.entity';
 
 @Injectable()
 export class ProductService {
@@ -24,10 +26,10 @@ export class ProductService {
       throw new BadRequestException('storeId or restaurantId is required');
     }
 
-    const store: any = await this.menuRepository.manager.findOne('Restaurant', {
+    const store: any = await this.menuRepository.manager.findOne(Store, {
       where: { id: storeId },
     });
-    const station: any = await this.menuRepository.manager.findOne('Station', {
+    const station: any = await this.menuRepository.manager.findOne(Station, {
       where: { id: createMenuDto.stationId },
     });
     if (!station) {
@@ -43,7 +45,7 @@ export class ProductService {
         `User #${userId} is not the owner of store #${storeId}`,
       );
     }
-    if (station.restaurantId !== storeId) {
+    if ((station.storeId ?? station.restaurantId) !== storeId) {
       throw new BadRequestException(
         `Station #${stationId} does not belong to store #${storeId}`,
       );
@@ -52,7 +54,7 @@ export class ProductService {
     const menu = this.menuRepository.create({
       id: nanoid10(),
       ...createMenuDto,
-      restaurant: store,
+      store,
       station,
     });
     return await this.menuRepository.save(menu);
@@ -82,7 +84,7 @@ export class ProductService {
 
   async findByStoreId(storeId: string) {
     const menus = await this.menuRepository.find({
-      where: { restaurant: { id: storeId } },
+      where: { store: { id: storeId } },
     });
     if (menus.length === 0) {
       throw new NotFoundException(`No menus found for store #${storeId}`);

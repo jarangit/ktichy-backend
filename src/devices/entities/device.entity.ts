@@ -1,4 +1,4 @@
-import { Restaurant } from '@entities/restaurant.entity';
+import { Store } from '@entities/store.entity';
 import { Station } from '@entities/station.entity';
 import {
   BeforeInsert,
@@ -24,9 +24,9 @@ export class Device {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @ManyToOne(() => Restaurant, { onDelete: 'CASCADE', nullable: true })
+  @ManyToOne(() => Store, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'store_id' })
-  store: Restaurant;
+  store: Store;
 
   @ManyToOne(() => Station, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'station_id' })

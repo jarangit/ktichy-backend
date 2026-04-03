@@ -1,6 +1,6 @@
 import { Device } from '../../devices/entities/device.entity';
 import { PairingCode } from '../../pairing-codes/entities/pairing-code.entity';
-import { Restaurant } from '@entities/restaurant.entity';
+import { Store } from '@entities/store.entity';
 import { Station } from '@entities/station.entity';
 import {
   BeforeInsert,
@@ -34,9 +34,9 @@ export class PairingRequest {
   @Column({ name: 'pairing_code_id', type: 'varchar', length: 10 })
   pairingCodeId: string;
 
-  @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Store, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'store_id' })
-  store: Restaurant;
+  store: Store;
 
   @Column({ name: 'store_id', type: 'varchar', length: 10 })
   storeId: string;

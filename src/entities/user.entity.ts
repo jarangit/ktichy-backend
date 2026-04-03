@@ -8,7 +8,7 @@ import {
   OneToMany,
   BeforeInsert,
 } from 'typeorm';
-import { Restaurant } from './restaurant.entity';
+import { Store } from './store.entity';
 import { Exclude } from 'class-transformer';
 import { nanoid10 } from '../utils/nanoid';
 
@@ -24,8 +24,8 @@ export class User {
   @Exclude()
   passwordHash: string;
 
-  @OneToMany(() => Restaurant, (restaurant) => restaurant.owner)
-  restaurants: Restaurant[];
+  @OneToMany(() => Store, (store) => store.owner)
+  stores: Store[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -63,7 +63,7 @@ export class PairingRequestsService {
       throw new NotFoundException(`Station #${stationId} not found`);
     }
 
-    if (station.restaurantId !== request.storeId) {
+    if ((station.storeId ?? station.restaurantId) !== request.storeId) {
       throw new BadRequestException('Station does not belong to request store');
     }
 

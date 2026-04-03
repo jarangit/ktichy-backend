@@ -43,7 +43,7 @@ export class StationsService {
   async findOne({ id, userId }: { id: string; userId?: string }) {
     if (userId) {
       const station = await this.stationRepository.findOne({
-        where: { id, restaurant: { owner_id: userId } },
+        where: { id, store: { owner_id: userId } },
       });
       if (!station) {
         throw new Error(`Station with ID ${id} not found for user ${userId}`);
@@ -106,7 +106,7 @@ export class StationsService {
 
   async findByStoreId(storeId: string) {
     return this.stationRepository.find({
-      where: { restaurant: { id: storeId } },
+      where: { store: { id: storeId } },
     });
   }
 }

@@ -7,9 +7,10 @@ import {
   ManyToOne,
   OneToMany,
   BeforeInsert,
+  JoinColumn,
 } from 'typeorm';
 import { OrderItem } from '../../entities/order-item.entity';
-import { Restaurant } from '../../entities/restaurant.entity';
+import { Store } from '../../entities/store.entity';
 import { nanoid10 } from '../../utils/nanoid';
 
 export enum OrderStatus {
@@ -42,10 +43,11 @@ export class Order {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.orders, {
+  @ManyToOne(() => Store, (store) => store.orders, {
     onDelete: 'CASCADE',
   })
-  restaurant: Restaurant;
+  @JoinColumn({ name: 'storeId' })
+  store: Store;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
     cascade: true,

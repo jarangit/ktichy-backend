@@ -11,6 +11,7 @@ import { Order } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderItem } from '../entities/order-item.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
+import { Store } from '../entities/store.entity';
 
 @Injectable()
 export class OrdersService {
@@ -40,10 +41,9 @@ export class OrdersService {
       throw new BadRequestException('storeId or restaurantId is required');
     }
 
-    const store = await this.orderRepository.manager.findOne(
-      'Restaurant',
-      { where: { id: storeId } },
-    );
+    const store = await this.orderRepository.manager.findOne(Store, {
+      where: { id: storeId },
+    });
 
     if (!store) {
       throw new NotFoundException(`Store #${storeId} not found`);
@@ -81,7 +81,7 @@ export class OrdersService {
     // Prepare order data
     const data = {
       orderNumber: createOrderDto.orderNumber,
-      restaurant: store,
+      store,
       items: order.items,
     };
 
@@ -124,13 +124,13 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({
       where: {
         id: orderId,
-        restaurant: {
+        store: {
           owner: { id: userId },
         },
       },
       relations: [
-        'restaurant',
-        'restaurant.owner',
+        'store',
+        'store.owner',
         'items',
         'items.stationItems',
       ],
@@ -151,7 +151,7 @@ export class OrdersService {
 
   async findByStoreId(storeId: string): Promise<Order[]> {
     const orders = await this.orderRepository.find({
-      where: { restaurant: { id: storeId } },
+      where: { store: { id: storeId } },
     });
 
     if (!orders.length) {

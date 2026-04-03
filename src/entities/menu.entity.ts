@@ -4,11 +4,12 @@ import {
   PrimaryColumn,
   Column,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   BeforeInsert,
 } from 'typeorm';
-import { Restaurant } from './restaurant.entity';
+import { Store } from './store.entity';
 import { nanoid10 } from '../utils/nanoid';
 
 export enum MenuType {
@@ -22,8 +23,9 @@ export class Menu {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @ManyToOne(() => Restaurant, { onDelete: 'CASCADE' })
-  restaurant: Restaurant;
+  @ManyToOne(() => Store, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'storeId' })
+  store: Store;
 
   @Column()
   name: string;
