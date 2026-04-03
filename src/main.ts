@@ -8,6 +8,7 @@ import { LoggingInterceptor } from 'midleware/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api/v1');
   // dev branch
   app.enableCors({
     origin: process.env.CLIENT_URL, // ✅ ใส่ origin ของ frontend

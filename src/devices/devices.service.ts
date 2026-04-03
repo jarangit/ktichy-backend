@@ -15,8 +15,15 @@ export class DevicesService {
     createDeviceDto: CreateDeviceDto,
   ): Promise<CreateDeviceResponse> {
     const storeId = createDeviceDto.storeId ?? createDeviceDto.restaurantId;
+    const stationId = createDeviceDto.stationId;
+
     if (!createDeviceDto.deviceId) {
       throw new BadRequestException('deviceId is required');
+    }
+    if (storeId && !stationId) {
+      throw new BadRequestException(
+        'stationId is required when pairing device to store',
+      );
     }
 
     const existing = await this.deviceRepository.findOne({
@@ -30,12 +37,11 @@ export class DevicesService {
     const device = this.deviceRepository.create({
       ...createDeviceDto,
       storeId,
+      stationId,
       status: storeId ? DeviceStatus.PAIRED : DeviceStatus.UNPAIRED,
       lastSeenAt: new Date(),
       store: storeId ? ({ id: storeId } as any) : undefined,
-      station: createDeviceDto.stationId
-        ? ({ id: createDeviceDto.stationId } as any)
-        : undefined,
+      station: stationId ? ({ id: stationId } as any) : undefined,
     });
     return await this.deviceRepository.save(device);
   }

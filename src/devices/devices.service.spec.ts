@@ -90,4 +90,14 @@ describe('DevicesService', () => {
       }),
     ).rejects.toThrow(BadRequestException);
   });
+
+  it('should throw BadRequestException when storeId is provided without stationId', async () => {
+    await expect(
+      service.create({
+        deviceId: 'dv_1000',
+        deviceName: 'tablet',
+        storeId: 'storeId',
+      }),
+    ).rejects.toThrow(BadRequestException);
+  });
 });
