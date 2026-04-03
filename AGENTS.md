@@ -1,89 +1,103 @@
-# AI Agent Guide - ktichy-backend
+# Kitchy Backend
 
-เอกสารนี้สรุปบริบทของโปรเจกต์สำหรับ AI agent ที่เข้ามาช่วยแก้โค้ดใน repository นี้
+Kitchen Display System (KDS) backend for restaurant order management.
 
-## Project Snapshot
+## Tech Stack
 
-- Framework: NestJS 10 + TypeScript
-- Database: MySQL + TypeORM (`@nestjs/typeorm`)
-- Auth: JWT (`@nestjs/jwt`, `passport-jwt`)
-- Monitoring: Sentry (`@sentry/nestjs`)
-- Runtime: Node.js
+- **Framework**: NestJS 10 (TypeScript)
+- **Database**: MySQL 8.0 via TypeORM 0.3
+- **Auth**: JWT (passport-jwt), bcrypt for passwords
+- **Real-time**: Socket.IO (@nestjs/websockets) - dependencies installed, no gateways yet
+- **Scheduling**: @nestjs/schedule (registered, no cron jobs yet)
+- **Monitoring**: Sentry (@sentry/nestjs + profiling)
+- **IDs**: nanoid 10-char string PKs via `src/utils/nanoid.ts` (`nanoid10()`)
+- **Validation**: class-validator + class-transformer installed (ValidationPipe NOT enabled in main.ts)
+- **API prefix**: `/api/v1`
+- **Default port**: 8080
+- **Container**: Docker + docker-compose
 
-Entry points หลัก:
+## Project Structure
 
-- `src/main.ts`
-- `src/app.module.ts`
-- `src/data-source.ts`
-
-## Key Modules
-
-โมดูลหลักที่ใช้งานจริงใน `AppModule`:
-
-- `users`
-- `stores` (รองรับ route alias `restaurants`)
-- `stations`
-- `products`
-- `orders`
-- `order-station-item`
-- `devices`
-- `pairing-codes`
-- `auth`
-
-## Important Architecture Notes
-
-- มี global response wrapper จาก `ResponseInterceptor` (`success`, `message`, `data`)
-- มี global exception filter (`DatabaseExceptionFilter`) ที่ map DB errors และส่งเข้า Sentry
-- มี logging interceptor เก็บ request/response log พร้อม `x-request-id`
-- ระบบอยู่ช่วง transition จากคำว่า `restaurant` ไป `store`
-  - API บางจุดยังรองรับทั้ง `restaurantId` และ `storeId`
-  - route `stores` รองรับทั้ง `/stores` และ `/restaurants`
-
-## Conventions To Follow When Editing
-
-- รักษา backward compatibility ระหว่าง `restaurant` และ `store` ถ้าแก้ logic ที่เกี่ยวข้อง
-- endpoint ที่เกี่ยว ownership/ข้อมูลส่วนตัวให้ใช้ `JwtAuthGuard`
-- ใช้ TypeORM repository pattern ตามรูปแบบโมดูลเดิม
-- ถ้าต้อง throw error ใน API layer ให้ใช้ Nest exceptions (`BadRequestException`, `NotFoundException`, ฯลฯ) มากกว่า `Error`
-- อย่าเปลี่ยนชื่อไฟล์/พาธที่ใช้งานอยู่แม้มี typo เดิม เช่น:
-  - `src/intrument.ts`
-  - `src/midleware/logging.interceptor.ts`
-
-## Entities and Imports
-
-โปรเจกต์นี้มี entity ทั้งใน `src/entities` และบางส่วนอยู่ในโฟลเดอร์ feature (`src/*/entities`)
-
-- ก่อนเพิ่ม entity ใหม่ ตรวจ import ใน module/service เดิมให้ตรง pattern ของไฟล์นั้น
-- ใน `tsconfig.json` มี path alias `@entities/*` แต่ code ส่วนใหญ่ยังใช้ relative imports
-
-## Environment Variables
-
-ค่าที่ต้องใช้บ่อย:
-
-- `PORT`
-- `CLIENT_URL`
-- `DB_HOST`
-- `DB_PORT`
-- `DB_USER`
-- `DB_PASS`
-- `DB_NAME`
-- `JWT_SECRET`
-- `SENTRY_DSN`
-
-## Useful Commands
-
-```bash
-npm install
-npm run start:dev
-npm run build
-npm run test
-npm run lint
-npm run migration:run
+```
+src/
+  auth/               # JWT guard + auth module (JwtAuthGuard -> req.user.sub)
+  users/              # User registration, login, GET /me
+  stores/             # Store CRUD (store.owner_id -> user)
+  stations/           # Kitchen station CRUD (station.storeId -> store)
+  products/           # Menu product CRUD (product.stationId -> station)
+  orders/             # Order CRUD (order.storeId -> store)
+  order-station-item/ # Links order items to stations (pending/complete)
+  devices/            # Physical display devices
+  pairing-codes/      # Pairing code generation for device-to-station linking
+  common/             # Filters, interceptors
+  utils/              # nanoid helpers
+  db/                 # Data source + migrations
 ```
 
-## Quick Safety Checklist For Agent
+## Key Conventions
 
-- อ่านโค้ดใน module ที่จะแก้ให้ครบก่อนทำ diff
-- เช็ค route/controller + service + dto + entity ให้สอดคล้องกัน
-- ถ้าแตะ auth/ownership logic ให้ทดสอบเส้นทางที่ต้องใช้ token
-- ถ้าแตะ schema/data mapping ให้ตรวจผลกระทบกับ migration และ query relations
+### Entity Pattern
+
+- All entities use `@PrimaryColumn({ type: 'varchar', length: 10 })` with `@BeforeInsert()` generating `nanoid10()`
+- Column naming: `snake_case` for DB via `@Column({ name: 'col_name' })`
+- Relations: TypeORM decorators (`@ManyToOne`, `@OneToMany`, `@OneToOne`)
+- Always add `@JoinColumn` on the owning side of relations
+- NEVER define both an explicit `@Column` and a `@ManyToOne` for the same FK (creates duplicate columns)
+
+### Module Pattern
+
+Each feature: `entity -> DTO -> service -> controller -> module -> register in app.module.ts`
+
+### Auth Pattern
+
+- `JwtAuthGuard` reads Bearer token, sets `req.user = { sub: userId }`
+- Protected routes: `@UseGuards(JwtAuthGuard)`
+- Owner ID: `req.user?.sub`
+
+### DTO Pattern
+
+- Create DTO: all fields for creation
+- Update DTO: extend `PartialType(CreateDto)` from `@nestjs/mapped-types`
+- Use class-validator decorators: `@IsString()`, `@IsNotEmpty()`, `@IsOptional()`, `@IsEnum()`, etc.
+
+### Known Issues (Active)
+
+1. `ValidationPipe` NOT enabled in `main.ts`
+2. `synchronize: true` in TypeORM config (should use migrations in production)
+3. `nanoid` uses `Math.random()` (not cryptographically secure)
+4. Several endpoints missing auth guards and ownership checks
+5. Pairing flow incomplete (pairing-requests module not yet created)
+
+## Commands
+
+```bash
+npm run build              # Build
+npm run start:dev          # Dev with watch
+npm run lint               # Lint + fix
+npm run test               # Unit tests (jest)
+npm run test:e2e           # E2E tests
+npm run migration:generate # Generate migration
+npm run migration:run      # Run migrations
+npm run db:reset           # Clear database
+```
+
+## Domain Model
+
+```
+User (owner)
+ +-- 1:N --> Store
+              +-- 1:N --> Station (grill, drinks, etc.)
+              |            +-- 1:N --> Product (menu items)
+              |            +-- 1:N --> OrderStationItem (work items)
+              |            +-- 1:1 --> PairingCode
+              +-- 1:N --> Order
+              |            +-- 1:N --> OrderItem --> 1:N --> OrderStationItem
+              +-- 1:N --> Device (display hardware)
+```
+
+Statuses:
+
+- Order: `NEW -> PREPARING -> READY`
+- OrderStationItem: `pending -> complete`
+- Device: `PENDING -> PAIRED`
+- PairingCode: `PENDING -> EXPIRED | CLOSED`
