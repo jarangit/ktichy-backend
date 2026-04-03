@@ -19,4 +19,13 @@ describe('AppController', () => {
       expect(appController.getHello()).toBe('Hello Kitchy');
     });
   });
+
+  describe('health', () => {
+    it('should return healthcheck payload', () => {
+      const health = appController.getHealth();
+
+      expect(health.status).toBe('ok');
+      expect(new Date(health.timestamp).toString()).not.toBe('Invalid Date');
+    });
+  });
 });
