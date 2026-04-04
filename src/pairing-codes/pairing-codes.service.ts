@@ -10,10 +10,6 @@ import { JoinPairingCodeDto } from './dto/join-pairing-code.dto';
 import { UpdatePairingCodeDto } from './dto/update-pairing-code.dto';
 import { PairingCode, PairingCodeStatus } from './entities/pairing-code.entity';
 import { Device, DeviceStatus } from '../devices/entities/device.entity';
-import {
-  PairingRequest,
-  PairingRequestStatus,
-} from '../pairing-requests/entities/pairing-request.entity';
 import { nanoid10 } from '../utils/nanoid';
 
 @Injectable()
@@ -23,8 +19,6 @@ export class PairingCodesService {
     private readonly pairingCodeRepository: Repository<PairingCode>,
     @InjectRepository(Device)
     private readonly deviceRepository: Repository<Device>,
-    @InjectRepository(PairingRequest)
-    private readonly pairingRequestRepository: Repository<PairingRequest>,
   ) {}
 
   async create(dto: CreatePairingCodeDto): Promise<any> {
@@ -63,7 +57,7 @@ export class PairingCodesService {
       };
     }
 
-    const ttlMinutes = dto.ttlMinutes ?? 10;
+    const ttlMinutes = dto.ttlMinutes ?? 100;
     const expiresAt =
       dto.expiresAt ?? new Date(now.getTime() + ttlMinutes * 60 * 1000);
 
@@ -84,82 +78,13 @@ export class PairingCodesService {
   }
 
   async joinByCode(code: string, dto: JoinPairingCodeDto) {
-    const pairingCode = await this.pairingCodeRepository.findOne({
-      where: { code, status: PairingCodeStatus.PENDING },
-    });
+    const pairingCode = await this.findPendingPairingCode(code);
 
-    if (!pairingCode) {
-      throw new NotFoundException('Pairing code not found');
-    }
-
-    if (pairingCode.expiresAt && pairingCode.expiresAt <= new Date()) {
-      pairingCode.status = PairingCodeStatus.EXPIRED;
-      await this.pairingCodeRepository.save(pairingCode);
-      throw new BadRequestException('Pairing code expired');
-    }
-
-    let device = await this.deviceRepository.findOne({
-      where: { deviceId: dto.deviceId },
-    });
-
-    if (!device) {
-      device = this.deviceRepository.create({
-        deviceId: dto.deviceId,
-        deviceName: dto.deviceName,
-        fingerprint: dto.fingerprint,
-        appVersion: dto.appVersion,
-        alias: dto.alias,
-        status: DeviceStatus.PENDING,
-        lastSeenAt: new Date(),
-      });
-      device = await this.deviceRepository.save(device);
-    } else {
-      device.deviceName = dto.deviceName ?? device.deviceName;
-      device.fingerprint = dto.fingerprint ?? device.fingerprint;
-      device.appVersion = dto.appVersion ?? device.appVersion;
-      device.alias = dto.alias ?? device.alias;
-      device.lastSeenAt = new Date();
-      if (device.status !== DeviceStatus.PAIRED) {
-        device.status = DeviceStatus.PENDING;
-      }
-      device = await this.deviceRepository.save(device);
-    }
-
-    const existingRequest = await this.pairingRequestRepository.findOne({
-      where: {
-        deviceId: device.id,
-        storeId: pairingCode.storeId,
-        status: PairingRequestStatus.WAITING_APPROVAL,
-      },
-      order: { createdAt: 'DESC' },
-    });
-
-    if (existingRequest) {
-      return {
-        pairingRequestId: existingRequest.id,
-        status: existingRequest.status,
-        expiresAt: existingRequest.expiresAt,
-      };
-    }
-
-    const request = this.pairingRequestRepository.create({
-      pairingCodeId: pairingCode.id,
-      storeId: pairingCode.storeId,
-      stationId: pairingCode.stationId,
-      deviceId: device.id,
-      requestedAlias: dto.alias,
-      requestedFingerprint: dto.fingerprint,
-      requestedAppVersion: dto.appVersion,
-      status: PairingRequestStatus.WAITING_APPROVAL,
-      expiresAt: pairingCode.expiresAt,
-    });
-
-    const createdRequest = await this.pairingRequestRepository.save(request);
+    await this.ensurePairingCodeNotExpired(pairingCode);
+    await this.createPendingDevice(pairingCode, dto);
 
     return {
-      pairingRequestId: createdRequest.id,
-      status: createdRequest.status,
-      expiresAt: createdRequest.expiresAt,
+      message: 'Device joined successfully (mocked response)',
     };
   }
 
@@ -199,6 +124,7 @@ export class PairingCodesService {
     return { message: `PairingCode #${id} has been removed` };
   }
 
+  // #region Private Methods
   private async generateUniqueCode(): Promise<string> {
     let code = '';
     let exists = true;
@@ -212,5 +138,48 @@ export class PairingCodesService {
     }
 
     return code;
+  }
+
+  private async findPendingPairingCode(code: string): Promise<PairingCode> {
+    const pairingCode = await this.pairingCodeRepository.findOne({
+      where: { code, status: PairingCodeStatus.PENDING },
+    });
+
+    if (!pairingCode) {
+      throw new NotFoundException('Pairing code not found');
+    }
+
+    return pairingCode;
+  }
+
+  private async ensurePairingCodeNotExpired(
+    pairingCode: PairingCode,
+  ): Promise<void> {
+    const isExpired =
+      pairingCode.expiresAt && pairingCode.expiresAt <= new Date();
+
+    if (!isExpired) {
+      return;
+    }
+
+    pairingCode.status = PairingCodeStatus.EXPIRED;
+    await this.pairingCodeRepository.save(pairingCode);
+    throw new BadRequestException('Pairing code expired');
+  }
+
+  private async createPendingDevice(
+    pairingCode: PairingCode,
+    dto: JoinPairingCodeDto,
+  ): Promise<Device> {
+    const device = this.deviceRepository.create({
+      ...dto,
+      deviceId: `dev_${nanoid10()}`,
+      storeId: pairingCode.storeId,
+      stationId: pairingCode.stationId,
+      status: DeviceStatus.PAIRED,
+      lastSeenAt: new Date(),
+    });
+
+    return this.deviceRepository.save(device);
   }
 }

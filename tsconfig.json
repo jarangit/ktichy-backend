@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "baseUrl": "src",
-
     "paths": {
-      "@entities/*": ["entities/*"]
+      "@entities/*": [
+        "entities/*"
+      ]
     },
-
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
@@ -23,13 +23,14 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "inlineSources": true,
-
     // Set `sourceRoot` to  "/" to strip the build path prefix
     // from generated source code references.
     // This improves issue grouping in Sentry.
     "sourceRoot": "/"
   },
   "ts-node": {
-    "require": ["dotenv/config"]
+    "require": [
+      "dotenv/config"
+    ]
   }
 }
