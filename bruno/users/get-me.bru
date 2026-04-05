@@ -7,9 +7,13 @@ meta {
 get {
   url: {{baseUrl}}/users/me
   body: none
-  auth: none
+  auth: bearer
 }
 
 headers {
   Authorization: Bearer {{token}}
+}
+
+auth:bearer {
+  token: {{token}}
 }

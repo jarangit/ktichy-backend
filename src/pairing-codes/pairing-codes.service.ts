@@ -12,6 +12,9 @@ import { PairingCode, PairingCodeStatus } from './entities/pairing-code.entity';
 import { Device, DeviceStatus } from '../devices/entities/device.entity';
 import { nanoid10 } from '../utils/nanoid';
 
+import { JwtService } from '@nestjs/jwt';
+import { PairingRequest } from '../pairing-requests/entities/pairing-request.entity';
+
 @Injectable()
 export class PairingCodesService {
   constructor(
@@ -19,6 +22,7 @@ export class PairingCodesService {
     private readonly pairingCodeRepository: Repository<PairingCode>,
     @InjectRepository(Device)
     private readonly deviceRepository: Repository<Device>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(dto: CreatePairingCodeDto): Promise<any> {
@@ -81,10 +85,10 @@ export class PairingCodesService {
     const pairingCode = await this.findPendingPairingCode(code);
 
     await this.ensurePairingCodeNotExpired(pairingCode);
-    await this.createPendingDevice(pairingCode, dto);
+    const device = await this.createPendingDevice(pairingCode, dto);
 
     return {
-      message: 'Device joined successfully (mocked response)',
+      access_token: this.generateToken(device),
     };
   }
 
@@ -181,5 +185,20 @@ export class PairingCodesService {
     });
 
     return this.deviceRepository.save(device);
+  }
+
+  private generateToken(device: Device) {
+    const payload = {
+      sub: device.id,
+      station: device.stationId,
+      store: device.storeId,
+    };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET || 'defaultSecret',
+      expiresIn: '30d', // Token expiration time
+    });
+    return {
+      access_token: token,
+    };
   }
 }

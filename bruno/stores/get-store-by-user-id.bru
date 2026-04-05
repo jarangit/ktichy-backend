@@ -7,13 +7,17 @@ meta {
 get {
   url: {{baseUrl}}/stores/user/{{userId}}
   body: none
-  auth: none
+  auth: bearer
 }
 
 headers {
   Authorization: Bearer {{token}}
 }
 
+auth:bearer {
+  token: {{token}}
+}
+
 vars:pre-request {
-  userId: t29Ne5SYvg
+  userId: 1
 }

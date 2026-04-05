@@ -3,8 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DatabaseExceptionFilter } from './common/filters/db-exception.filter';
 import './intrument';
-import { ResponseInterceptor } from 'common/interceptor/response.interceptor';
-import { LoggingInterceptor } from 'midleware/logging.interceptor';
+import { ResponseInterceptor } from './common/interceptor/response.interceptor';
+import { LoggingInterceptor } from './midleware/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
