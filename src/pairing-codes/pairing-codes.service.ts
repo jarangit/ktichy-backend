@@ -14,6 +14,8 @@ import { nanoid10 } from '../utils/nanoid';
 
 import { JwtService } from '@nestjs/jwt';
 import { Store } from '../stores/entities/store.entity';
+import { AppJwtPayload } from '../auth/type';
+import { Station } from '../stations/entities/station.entity';
 
 @Injectable()
 export class PairingCodesService {
@@ -24,6 +26,8 @@ export class PairingCodesService {
     private readonly deviceRepository: Repository<Device>,
     @InjectRepository(Store)
     private readonly storeRepository: Repository<Store>,
+    @InjectRepository(Station)
+    private readonly stationRepository: Repository<Station>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -92,12 +96,18 @@ export class PairingCodesService {
 
   async joinByCode(code: string, dto: JoinPairingCodeDto) {
     const pairingCode = await this.findPendingPairingCode(code);
+
     await this.findStore(pairingCode.storeId);
     await this.ensurePairingCodeNotExpired(pairingCode);
     const device = await this.createPendingDevice(pairingCode, dto);
+
+    // update station
+    await this.updateStation(pairingCode.stationId, device.id);
+
     // update status paring code to closed
     pairingCode.status = PairingCodeStatus.CLOSED;
     await this.pairingCodeRepository.save(pairingCode);
+
     return {
       access_token: this.generateToken(device),
     };
@@ -159,6 +169,14 @@ export class PairingCodesService {
     const pairingCode = await this.pairingCodeRepository.findOne({
       where: { code, status: PairingCodeStatus.PENDING },
     });
+    const station = await this.stationRepository.findOne({
+      where: { id: pairingCode.stationId },
+    });
+    if (!station) {
+      throw new NotFoundException(
+        `Station #${pairingCode.stationId} not found`,
+      );
+    }
 
     if (!pairingCode) {
       throw new NotFoundException('Pairing code not found');
@@ -203,10 +221,11 @@ export class PairingCodesService {
   }
 
   private generateToken(device: Device) {
-    const payload = {
+    const payload: AppJwtPayload = {
       sub: device.id,
-      station: device.stationId,
+      tokenType: 'device',
       store: device.storeId,
+      station: device.stationId,
     };
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET || 'defaultSecret',
@@ -228,5 +247,20 @@ export class PairingCodesService {
 
     return store;
   }
-  // #endregion
+
+  private async updateStation(
+    stationId: string,
+    deviceId: string,
+  ): Promise<void> {
+    const station = await this.stationRepository.findOne({
+      where: { id: stationId },
+    });
+
+    if (!station) {
+      throw new NotFoundException(`Station #${stationId} not found`);
+    }
+
+    station.deviceId = deviceId;
+    await this.stationRepository.save(station);
+  }
 }

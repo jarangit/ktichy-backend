@@ -21,7 +21,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getMe(@Req() req: any) {
-    console.log("🚀 ~ UsersController ~ getMe ~ req:", req)
     // JwtStrategy ต้อง return { userId: payload.sub, ... } ใน validate
     const userId = req.user?.sub; // userId มาจาก JwtStrategy.validate
     if (!userId) throw new Error('User id not found in request');

@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { AppJwtPayload } from '../auth/type';
 
 @Injectable()
 export class UsersService {
@@ -71,7 +72,11 @@ export class UsersService {
   }
   // utils
   private generateToken(user: User) {
-    const payload = { sub: user.id, email: user.email };
+    const payload: AppJwtPayload = {
+      sub: user.id,
+      email: user.email,
+      tokenType: 'user',
+    };
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET || 'defaultSecret',
       expiresIn: '30d', // Token expiration time

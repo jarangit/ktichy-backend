@@ -1,0 +1,19 @@
+meta {
+  name: Get Station By device
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/stations/device
+  body: none
+  auth: bearer
+}
+
+headers {
+  ~Authorization: Bearer {{token}}
+}
+
+auth:bearer {
+  token: {{tokenDevice}}
+}

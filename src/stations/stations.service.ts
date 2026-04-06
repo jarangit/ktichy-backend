@@ -12,7 +12,6 @@ import { Repository } from 'typeorm';
 import { Product } from '../products/entities/product.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 
-
 @Injectable()
 export class StationsService {
   constructor(
@@ -39,7 +38,15 @@ export class StationsService {
     return `This action returns all stations`;
   }
 
-  async findOne({ id, userId }: { id: string; userId?: string }) {
+  async findOne({
+    id,
+    userId,
+    deviceId,
+  }: {
+    id: string;
+    userId?: string;
+    deviceId?: string;
+  }) {
     if (userId) {
       const station = await this.stationRepository.findOne({
         where: { id, store: { owner_id: userId } },
@@ -49,14 +56,23 @@ export class StationsService {
       }
       return station;
     }
+    if (deviceId) {
+      const station = await this.stationRepository.findOne({
+        where: { id, device: { id: deviceId } },
+      });
+      if (!station) {
+        throw new Error(
+          `Station with ID ${id} not found for device ${deviceId}`,
+        );
+      }
+      return station;
+    }
   }
 
   async update(id: string, updateStationDto: UpdateStationDto) {
     const storeId = updateStationDto.storeId;
     const payload =
-      typeof storeId === 'string'
-        ? { ...updateStationDto }
-        : updateStationDto;
+      typeof storeId === 'string' ? { ...updateStationDto } : updateStationDto;
 
     await this.stationRepository.update(id, payload);
     return this.stationRepository.findOneBy({ id });
