@@ -48,22 +48,18 @@ export class StationsService {
     deviceId?: string;
   }) {
     if (userId) {
-      const station = await this.stationRepository.findOne({
-        where: { id, store: { owner_id: userId } },
-      });
-      if (!station) {
-        throw new Error(`Station with ID ${id} not found for user ${userId}`);
+      if (!userId && !deviceId) {
+        throw new BadRequestException('userId or deviceId is required');
       }
-      return station;
-    }
-    if (deviceId) {
+      const where = userId
+        ? { id, store: { owner_id: userId } }
+        : { id, devices: { id: deviceId } };
       const station = await this.stationRepository.findOne({
-        where: { id, devices: { id: deviceId } },
+        where,
       });
       if (!station) {
-        throw new Error(
-          `Station with ID ${id} not found for device ${deviceId}`,
-        );
+        const by = userId ? `user ${userId}` : `device ${deviceId}`;
+        throw new Error(`Station with ID ${id} not found for user ${by}`);
       }
       return station;
     }

@@ -8,12 +8,13 @@ import {
   Delete,
   UseGuards,
   Req,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { StationsService } from './stations.service';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
-import { AppJwtPayload } from '../auth/type';
 
 @Controller('stations')
 export class StationsController {
@@ -32,17 +33,16 @@ export class StationsController {
   @UseGuards(JwtAuthGuard)
   @Get('device')
   findByDeviceId(@Req() req: any) {
-    const token = req.device;
-    const { tokenType } = token as AppJwtPayload;
+    const { sub, station, tokenType } = req.device;
     if (tokenType !== 'device') {
-      throw new Error('Invalid token type');
+      throw new ForbiddenException('Only device token is allowed');
     }
-    if (!token.station) {
-      throw new Error('Station ID is required in token');
+    if (!station) {
+      throw new BadRequestException('Station ID is required in token');
     }
     return this.stationsService.findOne({
-      id: token.station,
-      deviceId: token.sub,
+      id: station,
+      deviceId: sub,
     });
   }
 
