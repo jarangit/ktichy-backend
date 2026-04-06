@@ -58,7 +58,7 @@ export class StationsService {
     }
     if (deviceId) {
       const station = await this.stationRepository.findOne({
-        where: { id, device: { id: deviceId } },
+        where: { id, devices: { id: deviceId } },
       });
       if (!station) {
         throw new Error(

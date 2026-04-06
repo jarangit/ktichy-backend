@@ -102,7 +102,7 @@ export class PairingCodesService {
     const device = await this.createPendingDevice(pairingCode, dto);
 
     // update station
-    await this.updateStation(pairingCode.stationId, device.id);
+    // await this.updateStation(pairingCode.stationId, device.id);
 
     // update status paring code to closed
     pairingCode.status = PairingCodeStatus.CLOSED;
@@ -246,21 +246,5 @@ export class PairingCodesService {
     }
 
     return store;
-  }
-
-  private async updateStation(
-    stationId: string,
-    deviceId: string,
-  ): Promise<void> {
-    const station = await this.stationRepository.findOne({
-      where: { id: stationId },
-    });
-
-    if (!station) {
-      throw new NotFoundException(`Station #${stationId} not found`);
-    }
-
-    station.deviceId = deviceId;
-    await this.stationRepository.save(station);
   }
 }

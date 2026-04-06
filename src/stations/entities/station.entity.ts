@@ -10,7 +10,6 @@ import {
   OneToMany,
   OneToOne,
   BeforeInsert,
-  RelationId,
 } from 'typeorm';
 import { Store } from '../../stores/entities/store.entity';
 import { Product } from '../../products/entities/product.entity';
@@ -31,9 +30,11 @@ export class Station {
   store: Store;
 
   // Relation จริง: station ถือ FK ไปที่ device
-  @ManyToOne(() => Device, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'deviceId' })
-  device?: Device;
+  @OneToMany(() => Device, (device) => device.station, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
+  devices: Device[];
 
   @OneToMany(() => Product, (product) => product.station, {
     cascade: true,
@@ -56,10 +57,6 @@ export class Station {
 
   @Column({ type: 'varchar', length: 10 })
   storeId: string;
-
-  // อ่านค่า id ของ relation ได้ โดยไม่สร้างคอลัมน์ซ้ำ
-  @RelationId((station: Station) => station.device)
-  deviceId?: string;
 
   @Column()
   name: string;
