@@ -7,7 +7,7 @@ meta {
 post {
   url: {{baseUrl}}/pairing-codes
   body: json
-  auth: none
+  auth: bearer
 }
 
 headers {
@@ -15,10 +15,14 @@ headers {
   Content-Type: application/json
 }
 
+auth:bearer {
+  token: {{token}}
+}
+
 body:json {
   {
-    "storeId": "70z7s1lvMe",
-    "stationId": "IJ918ERgAj",
+    "storeId": "eISFWlgCYQ",
+    "stationId": "CEL9sQcXEq",
     "ttlMinutes": 10
   }
 }

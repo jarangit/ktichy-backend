@@ -13,7 +13,7 @@ import { Device, DeviceStatus } from '../devices/entities/device.entity';
 import { nanoid10 } from '../utils/nanoid';
 
 import { JwtService } from '@nestjs/jwt';
-import { PairingRequest } from '../pairing-requests/entities/pairing-request.entity';
+import { Store } from '../stores/entities/store.entity';
 
 @Injectable()
 export class PairingCodesService {
@@ -22,11 +22,20 @@ export class PairingCodesService {
     private readonly pairingCodeRepository: Repository<PairingCode>,
     @InjectRepository(Device)
     private readonly deviceRepository: Repository<Device>,
+    @InjectRepository(Store)
+    private readonly storeRepository: Repository<Store>,
     private readonly jwtService: JwtService,
   ) {}
 
   async create(dto: CreatePairingCodeDto): Promise<any> {
     const storeId = dto.storeId;
+    const store = await this.storeRepository.findOne({
+      where: { id: storeId },
+    });
+
+    if (!store) {
+      throw new NotFoundException(`Store #${storeId} not found`);
+    }
     if (!storeId) {
       throw new BadRequestException('storeId is required');
     }
@@ -83,10 +92,12 @@ export class PairingCodesService {
 
   async joinByCode(code: string, dto: JoinPairingCodeDto) {
     const pairingCode = await this.findPendingPairingCode(code);
-
+    await this.findStore(pairingCode.storeId);
     await this.ensurePairingCodeNotExpired(pairingCode);
     const device = await this.createPendingDevice(pairingCode, dto);
-
+    // update status paring code to closed
+    pairingCode.status = PairingCodeStatus.CLOSED;
+    await this.pairingCodeRepository.save(pairingCode);
     return {
       access_token: this.generateToken(device),
     };
@@ -161,6 +172,10 @@ export class PairingCodesService {
   ): Promise<void> {
     const isExpired =
       pairingCode.expiresAt && pairingCode.expiresAt <= new Date();
+    const status =
+      pairingCode.status === PairingCodeStatus.PENDING
+        ? 'pending'
+        : pairingCode.status.toLowerCase();
 
     if (!isExpired) {
       return;
@@ -168,7 +183,7 @@ export class PairingCodesService {
 
     pairingCode.status = PairingCodeStatus.EXPIRED;
     await this.pairingCodeRepository.save(pairingCode);
-    throw new BadRequestException('Pairing code expired');
+    throw new BadRequestException(`Pairing code ${status} expired`);
   }
 
   private async createPendingDevice(
@@ -201,4 +216,17 @@ export class PairingCodesService {
       access_token: token,
     };
   }
+
+  private async findStore(storeId: string): Promise<Store> {
+    const store = await this.storeRepository.findOne({
+      where: { id: storeId },
+    });
+
+    if (!store) {
+      throw new NotFoundException(`Store #${storeId} not found`);
+    }
+
+    return store;
+  }
+  // #endregion
 }

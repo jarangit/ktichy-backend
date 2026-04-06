@@ -5,9 +5,10 @@ import { PairingCodesService } from './pairing-codes.service';
 import { PairingCode } from './entities/pairing-code.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { Device } from '../devices/entities/device.entity';
+import { Store } from '../stores/entities/store.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PairingCode, Device]), JwtModule],
+  imports: [TypeOrmModule.forFeature([PairingCode, Device, Store]), JwtModule],
   controllers: [PairingCodesController],
   providers: [PairingCodesService],
 })
