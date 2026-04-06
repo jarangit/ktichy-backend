@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateStationDto } from './dto/create-station.dto';
 import { UpdateStationDto } from './dto/update-station.dto';
-import { Station } from '../entities/station.entity';
+import { Station } from './entities/station.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../products/entities/product.entity';
@@ -24,14 +24,13 @@ export class StationsService {
     private orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
   create(createStationDto: CreateStationDto) {
-    const storeId = createStationDto.storeId ?? createStationDto.restaurantId;
+    const storeId = createStationDto.storeId;
     if (!storeId) {
-      throw new BadRequestException('storeId or restaurantId is required');
+      throw new BadRequestException('storeId is required');
     }
 
     const station = this.stationRepository.create({
       ...createStationDto,
-      restaurantId: storeId,
     });
     return this.stationRepository.save(station);
   }
@@ -53,10 +52,10 @@ export class StationsService {
   }
 
   async update(id: string, updateStationDto: UpdateStationDto) {
-    const storeId = updateStationDto.storeId ?? updateStationDto.restaurantId;
+    const storeId = updateStationDto.storeId;
     const payload =
       typeof storeId === 'string'
-        ? { ...updateStationDto, restaurantId: storeId }
+        ? { ...updateStationDto }
         : updateStationDto;
 
     await this.stationRepository.update(id, payload);

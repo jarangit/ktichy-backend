@@ -9,8 +9,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { nanoid10 } from '../utils/nanoid';
-import { Store } from '../entities/store.entity';
-import { Station } from '../entities/station.entity';
+import { Store } from '../stores/entities/store.entity';
+import { Station } from '../stations/entities/station.entity';
 
 @Injectable()
 export class ProductService {
@@ -20,10 +20,10 @@ export class ProductService {
   ) {}
   async create(createMenuDto: CreateMenuDto, userId: string) {
     const { stationId } = createMenuDto;
-    const storeId = createMenuDto.storeId ?? createMenuDto.restaurantId;
+    const storeId = createMenuDto.storeId;
 
     if (!storeId) {
-      throw new BadRequestException('storeId or restaurantId is required');
+      throw new BadRequestException('storeId is required');
     }
 
     const store: any = await this.menuRepository.manager.findOne(Store, {
@@ -45,7 +45,7 @@ export class ProductService {
         `User #${userId} is not the owner of store #${storeId}`,
       );
     }
-    if ((station.storeId ?? station.restaurantId) !== storeId) {
+    if (station.storeId !== storeId) {
       throw new BadRequestException(
         `Station #${stationId} does not belong to store #${storeId}`,
       );

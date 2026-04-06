@@ -26,9 +26,9 @@ export class PairingCodesService {
   ) {}
 
   async create(dto: CreatePairingCodeDto): Promise<any> {
-    const storeId = dto.storeId ?? dto.restaurantId;
+    const storeId = dto.storeId;
     if (!storeId) {
-      throw new BadRequestException('storeId or restaurantId is required');
+      throw new BadRequestException('storeId is required');
     }
 
     const now = new Date();

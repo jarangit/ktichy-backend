@@ -9,8 +9,8 @@ import {
   UpdateDateColumn,
   BeforeInsert,
 } from 'typeorm';
-import { Store } from './store.entity';
-import { nanoid10 } from '../utils/nanoid';
+import { Store } from '../../stores/entities/store.entity';
+import { nanoid10 } from '../../utils/nanoid';
 
 export enum MenuType {
   DRINK = 'DRINK',

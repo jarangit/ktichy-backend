@@ -1,4 +1,4 @@
-import { Store } from '../../entities/store.entity';
+import { Store } from '../../stores/entities/store.entity';
 
 export class CreateDeviceDto {
   deviceId: string;
@@ -7,7 +7,6 @@ export class CreateDeviceDto {
   appVersion?: string;
   alias?: string;
   storeId?: string;
-  restaurantId?: string;
   stationId?: string;
 }
 export interface CreateDeviceResponse {

@@ -1,7 +1,7 @@
 import { Device } from '../../devices/entities/device.entity';
 import { PairingCode } from '../../pairing-codes/entities/pairing-code.entity';
-import { Store } from '@entities/store.entity';
-import { Station } from '@entities/station.entity';
+import { Store } from '../../stores/entities/store.entity';
+import { Station } from '../../stations/entities/station.entity';
 import {
   BeforeInsert,
   Column,

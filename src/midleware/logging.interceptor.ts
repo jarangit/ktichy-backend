@@ -36,7 +36,6 @@ export class LoggingInterceptor {
 
     const userId = req.user?.sub ?? req.user?.userId;
     const storeId = req.user?.storeId ?? req.user?.store_id;
-    const restaurantId = req.user?.restaurantId ?? req.user?.restaurant_id;
 
     const incomingRequestId =
       req.headers?.['x-request-id'] || req.headers?.['x-correlation-id'];
@@ -57,10 +56,9 @@ export class LoggingInterceptor {
     const userAgentSuffix = userAgent ? ` ua=${String(userAgent)}` : '';
     const userSuffix = userId ? ` userId=${userId}` : '';
     const storeSuffix = storeId ? ` storeId=${storeId}` : '';
-    const restaurantSuffix = restaurantId ? ` restaurantId=${restaurantId}` : '';
 
     this.logger.log(
-      `[REQ] ts=${requestAt} ${method} ${url}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${restaurantSuffix}${userAgentSuffix}`,
+      `[REQ] ts=${requestAt} ${method} ${url}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${userAgentSuffix}`,
     );
     return next
       .handle()
@@ -71,7 +69,7 @@ export class LoggingInterceptor {
             const statusCode = res?.statusCode;
             const responseAt = new Date().toISOString();
             this.logger.log(
-              `[RES] ts=${responseAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${restaurantSuffix}`,
+              `[RES] ts=${responseAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}`,
             );
           },
           error: (err) => {
@@ -80,7 +78,7 @@ export class LoggingInterceptor {
             const message = err?.message ?? String(err);
             const errorAt = new Date().toISOString();
             this.logger.error(
-              `[ERR] ts=${errorAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${restaurantSuffix} msg=${message}`,
+              `[ERR] ts=${errorAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix} msg=${message}`,
               err?.stack,
             );
           },

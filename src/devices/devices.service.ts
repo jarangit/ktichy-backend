@@ -14,7 +14,7 @@ export class DevicesService {
   async create(
     createDeviceDto: CreateDeviceDto,
   ): Promise<CreateDeviceResponse> {
-    const storeId = createDeviceDto.storeId ?? createDeviceDto.restaurantId;
+    const storeId = createDeviceDto.storeId;
     const stationId = createDeviceDto.stationId;
 
     if (!createDeviceDto.deviceId) {

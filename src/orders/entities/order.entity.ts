@@ -9,8 +9,8 @@ import {
   BeforeInsert,
   JoinColumn,
 } from 'typeorm';
-import { OrderItem } from '../../entities/order-item.entity';
-import { Store } from '../../entities/store.entity';
+import { OrderItem } from './order-item.entity';
+import { Store } from '../../stores/entities/store.entity';
 import { nanoid10 } from '../../utils/nanoid';
 
 export enum OrderStatus {

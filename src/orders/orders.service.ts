@@ -9,9 +9,9 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
-import { OrderItem } from '../entities/order-item.entity';
+import { OrderItem } from './entities/order-item.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
-import { Store } from '../entities/store.entity';
+import { Store } from '../stores/entities/store.entity';
 
 @Injectable()
 export class OrdersService {
@@ -36,9 +36,9 @@ export class OrdersService {
 
     const { products } = createOrderDto;
 
-    const storeId = createOrderDto.storeId ?? createOrderDto.restaurantId;
+    const storeId = createOrderDto.storeId;
     if (!storeId) {
-      throw new BadRequestException('storeId or restaurantId is required');
+      throw new BadRequestException('storeId is required');
     }
 
     const store = await this.orderRepository.manager.findOne(Store, {

@@ -12,7 +12,7 @@ import {
 import { Device, DeviceStatus } from '../devices/entities/device.entity';
 import { PairingCodeStatus } from '../pairing-codes/entities/pairing-code.entity';
 import { PairingCode } from '../pairing-codes/entities/pairing-code.entity';
-import { Station } from '@entities/station.entity';
+import { Station } from '../stations/entities/station.entity';
 import { ApprovePairingRequestDto } from './dto/approve-pairing-request.dto';
 
 @Injectable()
@@ -63,7 +63,7 @@ export class PairingRequestsService {
       throw new NotFoundException(`Station #${stationId} not found`);
     }
 
-    if ((station.storeId ?? station.restaurantId) !== request.storeId) {
+    if (station.storeId !== request.storeId) {
       throw new BadRequestException('Station does not belong to request store');
     }
 
