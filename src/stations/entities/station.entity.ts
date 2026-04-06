@@ -32,7 +32,7 @@ export class Station {
 
   // Relation จริง: station ถือ FK ไปที่ device
   @ManyToOne(() => Device, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'device_id' })
+  @JoinColumn({ name: 'deviceId' })
   device?: Device;
 
   @OneToMany(() => Product, (product) => product.station, {
