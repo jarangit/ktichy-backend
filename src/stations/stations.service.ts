@@ -47,7 +47,7 @@ export class StationsService {
     userId?: string;
     deviceId?: string;
   }) {
-    if (userId) {
+    if (userId || deviceId) {
       if (!userId && !deviceId) {
         throw new BadRequestException('userId or deviceId is required');
       }
