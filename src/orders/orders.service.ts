@@ -30,7 +30,7 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    const { products, storeId } = createOrderDto;
+    const { products, storeId, orderNumber } = createOrderDto;
     if (!products || !products.length) {
       throw new BadRequestException(
         'At least one product is required to create an order',
@@ -39,13 +39,15 @@ export class OrdersService {
     if (!storeId) {
       throw new BadRequestException('storeId is required to create an order');
     }
-    // Initialize order
-    const order = this.orderRepository.create();
-    order.items = [];
-
-
     const store = await this.orderRepository.manager.findOne(Store, {
       where: { id: storeId },
+    });
+
+    // Initialize order
+    const order = this.orderRepository.create({
+      orderNumber,
+      store,
+      items: [],
     });
 
     // Process each product in the order
@@ -60,6 +62,10 @@ export class OrdersService {
         where: { id: item.productId },
         relations: ['station'],
       });
+
+      if (!product) {
+        throw new NotFoundException(`Product #${item.productId} not found`);
+      }
 
       // Create order item
       const orderItem = this.orderItemRepository.create({
@@ -77,14 +83,7 @@ export class OrdersService {
       order.items.push(orderItem);
     }
 
-    // Prepare order data
-    const data = {
-      orderNumber: createOrderDto.orderNumber,
-      store,
-      items: order.items,
-    };
-
-    return await this.orderRepository.save(data);
+    return await this.orderRepository.save(order);
   }
 
   async findAll(): Promise<Order[]> {
