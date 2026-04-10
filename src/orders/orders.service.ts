@@ -43,7 +43,6 @@ export class OrdersService {
     const order = this.orderRepository.create();
     order.items = [];
 
-    console.log('🚀 ~ OrdersService ~ create ~ products:', products);
 
     const store = await this.orderRepository.manager.findOne(Store, {
       where: { id: storeId },
@@ -51,7 +50,6 @@ export class OrdersService {
 
     // Process each product in the order
     for (const item of products) {
-      console.log("🚀 ~ OrdersService ~ create ~ item:", item)
       // Validate product item
       if (!item.productId || !item.quantity) {
         throw new BadRequestException('Product ID and quantity are required');
