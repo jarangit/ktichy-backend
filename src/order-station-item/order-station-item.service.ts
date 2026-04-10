@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderStationItemDto } from './dto/create-order-station-item.dto';
 import { UpdateOrderStationItemDto } from './dto/update-order-station-item.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -33,8 +33,33 @@ export class OrderStationItemService {
     });
   }
 
-  update(id: string, updateOrderStationItemDto: UpdateOrderStationItemDto) {
-    return `This action updates a #${id} orderStationItem`;
+  async update(
+    id: string,
+    updateOrderStationItemDto: UpdateOrderStationItemDto,
+  ) {
+    const { status, stationId, orderItemId } = updateOrderStationItemDto;
+    if (!id || !status || !stationId || !orderItemId) {
+      throw new NotFoundException(
+        'id, status, stationId, and orderItemId are required to update order station item',
+      );
+    }
+    const station = await this.orderStationItemRepository.manager.findOne(
+      'Station',
+      {
+        where: { id: stationId },
+      },
+    );
+    if (!station) {
+      throw new NotFoundException(`Station #${stationId} not found`);
+    }
+    const orderItem = await this.orderStationItemRepository.findOne({
+      where: { id },
+    });
+    if (!orderItem) {
+      throw new NotFoundException(`Order station item #${id} not found`);
+    }
+
+    return await this.orderStationItemRepository.save({ ...orderItem, status });
   }
 
   remove(id: string) {
