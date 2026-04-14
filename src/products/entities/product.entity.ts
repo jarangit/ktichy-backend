@@ -19,7 +19,7 @@ export class Product {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @ManyToOne(() => Store, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Store, (store) => store.products, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'storeId' })
   store: Store;
 

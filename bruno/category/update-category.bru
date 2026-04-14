@@ -1,0 +1,27 @@
+meta {
+  name: Update Category
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/category/{{categoryId}}
+  body: json
+  auth: none
+}
+
+vars:pre-request {
+  categoryId: 1
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Hot Beverages",
+    "isActive": true,
+    "sortOrder": 2
+  }
+}

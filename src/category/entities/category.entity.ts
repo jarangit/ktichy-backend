@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryColumn,
@@ -14,7 +15,6 @@ import { Store } from '../../stores/entities/store.entity';
 import { Product } from '../../products/entities/product.entity';
 
 @Entity()
-@Index(['name', 'store'], { unique: true })
 export class Category {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
@@ -24,6 +24,7 @@ export class Category {
   }
 
   @ManyToOne(() => Store, (store) => store.categories, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'storeId' })
   store: Store;
 
   @OneToMany(() => Product, (product) => product.parentCategory)

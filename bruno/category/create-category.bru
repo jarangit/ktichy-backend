@@ -1,0 +1,24 @@
+meta {
+  name: Create Category
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/category
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Beverages",
+    "isActive": true,
+    "sortOrder": 1,
+    "storeId": "{{storeId}}"
+  }
+}
