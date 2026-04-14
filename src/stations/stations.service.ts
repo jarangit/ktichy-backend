@@ -23,13 +23,14 @@ export class StationsService {
     private orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
   create(createStationDto: CreateStationDto) {
-    const storeId = createStationDto.storeId;
+    const storeId = createStationDto.storeId?.trim();
     if (!storeId) {
       throw new BadRequestException('storeId is required');
     }
 
     const station = this.stationRepository.create({
       ...createStationDto,
+      storeId,
     });
     return this.stationRepository.save(station);
   }
@@ -66,9 +67,19 @@ export class StationsService {
   }
 
   async update(id: string, updateStationDto: UpdateStationDto) {
-    const storeId = updateStationDto.storeId;
-    const payload =
-      typeof storeId === 'string' ? { ...updateStationDto } : updateStationDto;
+    const hasStoreId = Object.prototype.hasOwnProperty.call(
+      updateStationDto,
+      'storeId',
+    );
+    const normalizedStoreId = updateStationDto.storeId?.trim();
+
+    if (hasStoreId && !normalizedStoreId) {
+      throw new BadRequestException('storeId cannot be empty');
+    }
+
+    const payload = hasStoreId
+      ? { ...updateStationDto, storeId: normalizedStoreId }
+      : updateStationDto;
 
     await this.stationRepository.update(id, payload);
     return this.stationRepository.findOneBy({ id });
@@ -116,8 +127,13 @@ export class StationsService {
   }
 
   async findByStoreId(storeId: string) {
+    const normalizedStoreId = storeId?.trim();
+    if (!normalizedStoreId) {
+      throw new BadRequestException('storeId is required');
+    }
+
     return this.stationRepository.find({
-      where: { store: { id: storeId } },
+      where: { store: { id: normalizedStoreId } },
     });
   }
 }

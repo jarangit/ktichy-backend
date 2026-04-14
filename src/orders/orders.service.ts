@@ -31,17 +31,23 @@ export class OrdersService {
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const { products, storeId, orderNumber } = createOrderDto;
+    const normalizedStoreId = storeId?.trim();
+
     if (!products || !products.length) {
       throw new BadRequestException(
         'At least one product is required to create an order',
       );
     }
-    if (!storeId) {
+    if (!normalizedStoreId) {
       throw new BadRequestException('storeId is required to create an order');
     }
     const store = await this.orderRepository.manager.findOne(Store, {
-      where: { id: storeId },
+      where: { id: normalizedStoreId },
     });
+
+    if (!store) {
+      throw new NotFoundException(`Store #${normalizedStoreId} not found`);
+    }
 
     // Initialize order
     const order = this.orderRepository.create({
@@ -143,12 +149,19 @@ export class OrdersService {
   }
 
   async findByStoreId(storeId: string): Promise<Order[]> {
+    const normalizedStoreId = storeId?.trim();
+    if (!normalizedStoreId) {
+      throw new BadRequestException('storeId is required');
+    }
+
     const orders = await this.orderRepository.find({
-      where: { store: { id: storeId } },
+      where: { store: { id: normalizedStoreId } },
     });
 
     if (!orders.length) {
-      throw new NotFoundException(`No orders found for store #${storeId}`);
+      throw new NotFoundException(
+        `No orders found for store #${normalizedStoreId}`,
+      );
     }
 
     return orders;

@@ -14,11 +14,25 @@ export class DevicesService {
   async create(
     createDeviceDto: CreateDeviceDto,
   ): Promise<CreateDeviceResponse> {
-    const storeId = createDeviceDto.storeId;
-    const stationId = createDeviceDto.stationId;
+    const hasStoreId = Object.prototype.hasOwnProperty.call(
+      createDeviceDto,
+      'storeId',
+    );
+    const hasStationId = Object.prototype.hasOwnProperty.call(
+      createDeviceDto,
+      'stationId',
+    );
+    const storeId = createDeviceDto.storeId?.trim();
+    const stationId = createDeviceDto.stationId?.trim();
 
     if (!createDeviceDto.deviceId) {
       throw new BadRequestException('deviceId is required');
+    }
+    if (hasStoreId && !storeId) {
+      throw new BadRequestException('storeId cannot be empty');
+    }
+    if (hasStationId && !stationId) {
+      throw new BadRequestException('stationId cannot be empty');
     }
     if (storeId && !stationId) {
       throw new BadRequestException(

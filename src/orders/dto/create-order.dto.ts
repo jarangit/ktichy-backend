@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -8,12 +8,14 @@ export enum OrderStatus {
 }
 
 export class CreateOrderDto {
-  @IsOptional()
   @IsString()
-  storeId?: string;
+  @IsNotEmpty()
+  storeId: string;
 
   @IsString()
+  @IsNotEmpty()
   orderNumber: string;
 
+  @IsArray()
   products: { productId: string; quantity: number }[];
 }

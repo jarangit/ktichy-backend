@@ -1,5 +1,15 @@
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 export class CreateStationDto {
-  storeId?: string;
+  @IsString()
+  @IsNotEmpty()
+  storeId: string;
+
+  @IsString()
+  @IsNotEmpty()
   name: string;
+
+  @IsOptional()
+  @IsString()
   color?: string;
 }

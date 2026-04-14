@@ -32,16 +32,17 @@ export class PairingCodesService {
   ) {}
 
   async create(dto: CreatePairingCodeDto): Promise<any> {
-    const storeId = dto.storeId;
+    const storeId = dto.storeId?.trim();
+    if (!storeId) {
+      throw new BadRequestException('storeId is required');
+    }
+
     const store = await this.storeRepository.findOne({
       where: { id: storeId },
     });
 
     if (!store) {
       throw new NotFoundException(`Store #${storeId} not found`);
-    }
-    if (!storeId) {
-      throw new BadRequestException('storeId is required');
     }
 
     const now = new Date();

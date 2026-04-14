@@ -20,7 +20,7 @@ export class ProductService {
   ) {}
   async create(createMenuDto: CreateMenuDto, userId: string) {
     const { stationId } = createMenuDto;
-    const storeId = createMenuDto.storeId;
+    const storeId = createMenuDto.storeId?.trim();
 
     if (!storeId) {
       throw new BadRequestException('storeId is required');
@@ -83,11 +83,18 @@ export class ProductService {
   }
 
   async findByStoreId(storeId: string) {
+    const normalizedStoreId = storeId?.trim();
+    if (!normalizedStoreId) {
+      throw new BadRequestException('storeId is required');
+    }
+
     const menus = await this.menuRepository.find({
-      where: { store: { id: storeId } },
+      where: { store: { id: normalizedStoreId } },
     });
     if (menus.length === 0) {
-      throw new NotFoundException(`No menus found for store #${storeId}`);
+      throw new NotFoundException(
+        `No menus found for store #${normalizedStoreId}`,
+      );
     }
     return menus;
   }

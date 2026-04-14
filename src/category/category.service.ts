@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,14 +12,17 @@ export class CategoryService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
   create(createCategoryDto: CreateCategoryDto) {
-    const { name, isActive, sortOrder, storeId } = createCategoryDto;
+    const name = createCategoryDto.name?.trim();
+    const storeId = createCategoryDto.storeId?.trim();
+
     if (!name || !storeId) {
-      throw new Error('Name and StoreId are required');
+      throw new BadRequestException('name and storeId are required');
     }
+
     const category = this.categoryRepository.create({
       name,
-      isActive: isActive ?? true,
-      sortOrder: sortOrder ?? 0,
+      isActive: createCategoryDto.isActive ?? true,
+      sortOrder: createCategoryDto.sortOrder ?? 0,
       store: { id: storeId },
     });
     return this.categoryRepository.save(category);
@@ -34,6 +37,7 @@ export class CategoryService {
   }
 
   update(id: number, updateCategoryDto: UpdateCategoryDto) {
+    void updateCategoryDto;
     return `This action updates a #${id} category`;
   }
 
