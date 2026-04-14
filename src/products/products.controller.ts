@@ -9,8 +9,8 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { CreateMenuDto } from './dto/create-menu.dto';
-import { UpdateMenuDto } from './dto/update-menu.dto';
+import { CreateProductDto } from './dto/create-menu.dto';
+import { UpdateProductDto } from './dto/update-menu.dto';
 import { ProductService } from './products.service';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
@@ -20,9 +20,9 @@ export class ProductsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createMenuDto: CreateMenuDto, @Req() req: any) {
+  create(@Body() createProductDto: CreateProductDto, @Req() req: any) {
     const userId = req.user?.sub;
-    return this.productService.create(createMenuDto, userId);
+    return this.productService.create(createProductDto, userId);
   }
 
   @Get()
@@ -36,8 +36,8 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
-    return this.productService.update(id, updateMenuDto);
+  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+    return this.productService.update(id, updateProductDto);
   }
 
   @Delete(':id')

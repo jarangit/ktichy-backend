@@ -27,13 +27,15 @@ export class Product {
     nullable: true,
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'stationId' })
   station: Station;
 
   @ManyToOne(() => Category, (category) => category.products, {
     nullable: true,
     onDelete: 'SET NULL',
   })
-  parentCategory: Category;
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
 
   @Column()
   name: string;

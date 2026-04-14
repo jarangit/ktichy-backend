@@ -12,17 +12,17 @@ export class CategoryService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
   create(createCategoryDto: CreateCategoryDto) {
-    const name = createCategoryDto.name?.trim();
-    const storeId = createCategoryDto.storeId?.trim();
+    const { name, storeId, isActive, sortOrder } = createCategoryDto;
+    const trimmedName = name?.trim();
 
-    if (!name || !storeId) {
+    if (!trimmedName || !storeId) {
       throw new BadRequestException('name and storeId are required');
     }
 
     const category = this.categoryRepository.create({
-      name,
-      isActive: createCategoryDto.isActive ?? true,
-      sortOrder: createCategoryDto.sortOrder ?? 0,
+      name: trimmedName,
+      isActive: isActive ?? true,
+      sortOrder: sortOrder ?? 0,
       store: { id: storeId },
     });
     return this.categoryRepository.save(category);
