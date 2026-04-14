@@ -15,6 +15,7 @@ import { DevicesModule } from './devices/devices.module';
 import { PairingCodesModule } from './pairing-codes/pairing-codes.module';
 import { PairingRequestsModule } from './pairing-requests/pairing-requests.module';
 import { CategoryModule } from './category/category.module';
+import { QuickNoteModule } from './quick-note/quick-note.module';
 
 const infrastructureModules = [
   TypeOrmModule.forRoot({
@@ -45,7 +46,12 @@ const featureModules = [
 ];
 
 @Module({
-  imports: [...infrastructureModules, ...featureModules, CategoryModule],
+  imports: [
+    ...infrastructureModules,
+    ...featureModules,
+    CategoryModule,
+    QuickNoteModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

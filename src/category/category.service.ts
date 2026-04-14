@@ -36,6 +36,13 @@ export class CategoryService {
     return `This action returns a #${id} category`;
   }
 
+  findByStoreId(storeId: string) {
+    return this.categoryRepository.find({
+      where: { store: { id: storeId } },
+      order: { sortOrder: 'ASC' },
+    });
+  }
+
   update(id: number, updateCategoryDto: UpdateCategoryDto) {
     void updateCategoryDto;
     return `This action updates a #${id} category`;

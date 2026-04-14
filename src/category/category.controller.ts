@@ -30,6 +30,11 @@ export class CategoryController {
     return this.categoryService.findOne(+id);
   }
 
+  @Get('store/:storeId')
+  findByStoreId(@Param('storeId') storeId: string) {
+    return this.categoryService.findByStoreId(storeId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

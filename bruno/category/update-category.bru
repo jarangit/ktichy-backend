@@ -1,17 +1,13 @@
 meta {
   name: Update Category
   type: http
-  seq: 4
+  seq: 5
 }
 
 patch {
   url: {{baseUrl}}/category/{{categoryId}}
   body: json
   auth: none
-}
-
-vars:pre-request {
-  categoryId: 1
 }
 
 headers {
