@@ -75,22 +75,11 @@ export class ProductService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const { stationId, categoryId, storeId } = updateProductDto;
-    const store = storeId
-      ? await this.findByIdOrFail(Store, storeId, 'Store')
-      : undefined;
-    const station = stationId
-      ? await this.findByIdOrFail(Station, stationId, 'Station')
-      : undefined;
-    const category = categoryId
-      ? await this.findByIdOrFail(Category, categoryId, 'Category')
-      : undefined;
+    const relations = await this.resolveRelations(updateProductDto);
     const product = await this.findByIdOrFail(Product, id, 'Product');
     const updated = this.productRepository.merge(product, {
       ...updateProductDto,
-      store,
-      station,
-      category,
+      ...relations,
     });
     await this.productRepository.save(updated);
     return this.productRepository.findOneBy({ id });
@@ -121,6 +110,23 @@ export class ProductService {
     }
     return products;
   }
+  private readonly productRelationResolvers = {
+    storeId: {
+      entity: Store,
+      relation: 'store',
+      label: 'Store',
+    },
+    stationId: {
+      entity: Station,
+      relation: 'station',
+      label: 'Station',
+    },
+    categoryId: {
+      entity: Category,
+      relation: 'category',
+      label: 'Category',
+    },
+  } as const;
 
   private async findByIdOrFail<Entity extends ObjectLiteral>(
     target: EntityTarget<Entity>,
@@ -136,5 +142,26 @@ export class ProductService {
     }
 
     return entity;
+  }
+  private async resolveRelations(updateProductDto: UpdateProductDto) {
+    const relations: Record<string, unknown> = {};
+
+    for (const [dtoField, config] of Object.entries(
+      this.productRelationResolvers,
+    )) {
+      const id = updateProductDto[dtoField];
+
+      if (!id) {
+        continue;
+      }
+
+      relations[config.relation] = await this.findByIdOrFail(
+        config.entity,
+        id,
+        config.label,
+      );
+    }
+
+    return relations;
   }
 }
