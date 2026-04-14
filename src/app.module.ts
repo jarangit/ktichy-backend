@@ -14,6 +14,7 @@ import { OrderStationItemModule } from './order-station-item/order-station-item.
 import { DevicesModule } from './devices/devices.module';
 import { PairingCodesModule } from './pairing-codes/pairing-codes.module';
 import { PairingRequestsModule } from './pairing-requests/pairing-requests.module';
+import { CategoryModule } from './category/category.module';
 
 const infrastructureModules = [
   TypeOrmModule.forRoot({
@@ -44,7 +45,7 @@ const featureModules = [
 ];
 
 @Module({
-  imports: [...infrastructureModules, ...featureModules],
+  imports: [...infrastructureModules, ...featureModules, CategoryModule],
   controllers: [AppController],
   providers: [AppService],
 })

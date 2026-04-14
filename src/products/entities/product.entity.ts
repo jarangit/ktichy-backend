@@ -12,6 +12,7 @@ import {
   BeforeInsert,
 } from 'typeorm';
 import { nanoid10 } from '../../utils/nanoid';
+import { Category } from '../../category/entities/category.entity';
 
 @Entity()
 export class Product {
@@ -27,6 +28,12 @@ export class Product {
     onDelete: 'CASCADE',
   })
   station: Station;
+
+  @ManyToOne(() => Category, (category) => category.products, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  parentCategory: Category;
 
   @Column()
   name: string;

@@ -13,6 +13,8 @@ import { Station } from '../../stations/entities/station.entity';
 import { User } from '../../users/entities/user.entity';
 import { Order } from '../../orders/entities/order.entity';
 import { nanoid10 } from '../../utils/nanoid';
+import { Category } from '../../category/entities/category.entity';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity({ name: 'store' })
 export class Store {
@@ -34,6 +36,12 @@ export class Store {
 
   @OneToMany(() => Order, (order) => order.store)
   orders: Order[];
+
+  @OneToMany(() => Category, (category) => category.store)
+  categories: Category[];
+
+  @OneToMany(() => Product, (product) => product.store)
+  products: Product[];
 
   @CreateDateColumn()
   createdAt: Date;
