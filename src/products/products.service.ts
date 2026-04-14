@@ -70,6 +70,12 @@ export class ProductService {
     return `This action returns all products`;
   }
 
+  findByCategoryId(categoryId: string) {
+    return this.productRepository.find({
+      where: { category: { id: categoryId } },
+    });
+  }
+
   findOne(id: string) {
     return `This action returns a #${id} product`;
   }
