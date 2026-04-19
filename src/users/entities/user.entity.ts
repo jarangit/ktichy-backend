@@ -17,8 +17,11 @@ export class User {
   @PrimaryColumn({ type: 'varchar', length: 10 })
   id: string;
 
-  @Column({ unique: true })
-  email: string;
+  @Column({ unique: true, nullable: true })
+  email: string | null;
+
+  @Column({ unique: true, nullable: true })
+  phoneNumber: string | null;
 
   @Column({ select: false })
   @Exclude()

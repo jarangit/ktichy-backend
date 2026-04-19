@@ -1,21 +1,23 @@
-export class CreateUserDto {
-  password: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  isActive?: boolean;
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator';
 
-  constructor(
-    password: string,
-    email: string,
-    firstName?: string,
-    lastName?: string,
-    isActive: boolean = true,
-  ) {
-    this.password = password;
-    this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.isActive = isActive;
-  }
+export class CreateUserDto {
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'phoneNumber must be a valid E.164 format',
+  })
+  phoneNumber?: string;
 }

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/users
+  url: {{baseUrl}}/users/register
   body: json
   auth: none
 }
@@ -17,8 +17,6 @@ headers {
 body:json {
   {
     "email": "test@gmail.com",
-    "password": "123",
-    "firstName": "John",
-    "lastName": "Doe"
+    "password": "12345678"
   }
 }

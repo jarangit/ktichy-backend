@@ -7,7 +7,8 @@ interface BaseJwtPayload {
 
 interface UserJwtPayload extends BaseJwtPayload {
   tokenType: 'user';
-  email: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 interface DeviceJwtPayload extends BaseJwtPayload {

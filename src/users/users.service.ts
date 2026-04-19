@@ -20,13 +20,36 @@ export class UsersService {
     private jwtService: JwtService,
   ) {}
   async create(createUserDto: CreateUserDto) {
-    const { email, password } = createUserDto;
-    const existing = await this.userRepository.findOne({ where: { email } });
-    if (existing) {
-      throw new BadRequestException('Email already registered');
+    const { email, phoneNumber, password } = createUserDto;
+
+    if (!email && !phoneNumber) {
+      throw new BadRequestException('Email or phone number is required');
     }
+
+    if (email) {
+      const existingByEmail = await this.userRepository.findOne({
+        where: { email },
+      });
+      if (existingByEmail) {
+        throw new BadRequestException('Email already registered');
+      }
+    }
+
+    if (phoneNumber) {
+      const existingByPhone = await this.userRepository.findOne({
+        where: { phoneNumber },
+      });
+      if (existingByPhone) {
+        throw new BadRequestException('Phone number already registered');
+      }
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
-    const user = this.userRepository.create({ email, passwordHash });
+    const user = this.userRepository.create({
+      email: email ?? null,
+      phoneNumber: phoneNumber ?? null,
+      passwordHash,
+    });
     const savedUser = await this.userRepository.save(user);
     return this.generateToken(savedUser);
   }
@@ -74,8 +97,9 @@ export class UsersService {
   private generateToken(user: User) {
     const payload: AppJwtPayload = {
       sub: user.id,
-      email: user.email,
       tokenType: 'user',
+      email: user.email ?? undefined,
+      phoneNumber: user.phoneNumber ?? undefined,
     };
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET || 'defaultSecret',
