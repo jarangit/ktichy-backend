@@ -12,6 +12,8 @@ import { Repository } from 'typeorm';
 import { Product } from '../products/entities/product.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 
+const DEFAULT_STATION_COLOR = '#3B82F6';
+
 @Injectable()
 export class StationsService {
   constructor(
@@ -28,9 +30,13 @@ export class StationsService {
       throw new BadRequestException('storeId is required');
     }
 
+    const normalizedColor = createStationDto.color?.trim();
+    const color = normalizedColor || DEFAULT_STATION_COLOR;
+
     const station = this.stationRepository.create({
       ...createStationDto,
       storeId,
+      color,
     });
     return this.stationRepository.save(station);
   }
