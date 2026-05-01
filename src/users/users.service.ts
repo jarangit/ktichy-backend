@@ -27,18 +27,14 @@ export class UsersService {
     }
 
     if (email) {
-      const existingByEmail = await this.userRepository.findOne({
-        where: { email },
-      });
+      const existingByEmail = await this.findByEmail(email);
       if (existingByEmail) {
         throw new BadRequestException('Email already registered');
       }
     }
 
     if (phoneNumber) {
-      const existingByPhone = await this.userRepository.findOne({
-        where: { phoneNumber },
-      });
+      const existingByPhone = await this.findByPhoneNumber(phoneNumber);
       if (existingByPhone) {
         throw new BadRequestException('Phone number already registered');
       }
@@ -108,5 +104,13 @@ export class UsersService {
     return {
       access_token: token,
     };
+  }
+
+  private findByEmail(email: string) {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
+  private findByPhoneNumber(phoneNumber: string) {
+    return this.userRepository.findOne({ where: { phoneNumber } });
   }
 }

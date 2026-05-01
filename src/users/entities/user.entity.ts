@@ -11,7 +11,10 @@ import {
 import { Store } from '../../stores/entities/store.entity';
 import { Exclude } from 'class-transformer';
 import { nanoid10 } from '../../utils/nanoid';
-
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  BLOCKED = 'BLOCKED',
+}
 @Entity()
 export class User {
   @PrimaryColumn({ type: 'varchar', length: 10 })
@@ -19,6 +22,9 @@ export class User {
 
   @Column({ unique: true, nullable: true })
   email: string | null;
+
+  @Column({ type: 'varchar', length: 30, unique: true })
+  username: string;
 
   @Column({ unique: true, nullable: true })
   phoneNumber: string | null;
@@ -30,10 +36,10 @@ export class User {
   // I want to add status  to the user entity to indicate if the user is active or not. This will be a boolean field that defaults to true.
   @Column({
     type: 'enum',
-    enum: ['ACTIVE', 'PENDING', 'BLOCKED'],
-    default: 'ACTIVE',
+    enum: UserStatus,
+    default: UserStatus.ACTIVE,
   })
-  status: 'ACTIVE' | 'PENDING' | 'BLOCKED';
+  status: UserStatus;
 
   @OneToMany(() => Store, (store) => store.owner)
   stores: Store[];

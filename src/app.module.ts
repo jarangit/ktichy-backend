@@ -16,6 +16,7 @@ import { PairingCodesModule } from './pairing-codes/pairing-codes.module';
 import { PairingRequestsModule } from './pairing-requests/pairing-requests.module';
 import { CategoryModule } from './category/category.module';
 import { QuickNoteModule } from './quick-note/quick-note.module';
+import { UserIdentitiesModule } from './user_identities/user_identities.module';
 
 const infrastructureModules = [
   TypeOrmModule.forRoot({
@@ -51,6 +52,7 @@ const featureModules = [
     ...featureModules,
     CategoryModule,
     QuickNoteModule,
+    UserIdentitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
