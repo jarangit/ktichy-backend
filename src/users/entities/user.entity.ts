@@ -27,6 +27,14 @@ export class User {
   @Exclude()
   passwordHash: string;
 
+  // I want to add status  to the user entity to indicate if the user is active or not. This will be a boolean field that defaults to true.
+  @Column({
+    type: 'enum',
+    enum: ['ACTIVE', 'PENDING', 'BLOCKED'],
+    default: 'ACTIVE',
+  })
+  status: 'ACTIVE' | 'PENDING' | 'BLOCKED';
+
   @OneToMany(() => Store, (store) => store.owner)
   stores: Store[];
 
