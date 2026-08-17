@@ -1,4 +1,9 @@
-import { CallHandler, ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { tap } from 'rxjs/operators';
 import { nanoid16 } from '../utils/nanoid';
 
@@ -60,29 +65,27 @@ export class LoggingInterceptor {
     this.logger.log(
       `[REQ] ts=${requestAt} ${method} ${url}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}${userAgentSuffix}`,
     );
-    return next
-      .handle()
-      .pipe(
-        tap({
-          next: () => {
-            const durationMs = Date.now() - now;
-            const statusCode = res?.statusCode;
-            const responseAt = new Date().toISOString();
-            this.logger.log(
-              `[RES] ts=${responseAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}`,
-            );
-          },
-          error: (err) => {
-            const durationMs = Date.now() - now;
-            const statusCode = res?.statusCode;
-            const message = err?.message ?? String(err);
-            const errorAt = new Date().toISOString();
-            this.logger.error(
-              `[ERR] ts=${errorAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix} msg=${message}`,
-              err?.stack,
-            );
-          },
-        }),
-      );
+    return next.handle().pipe(
+      tap({
+        next: () => {
+          const durationMs = Date.now() - now;
+          const statusCode = res?.statusCode;
+          const responseAt = new Date().toISOString();
+          this.logger.log(
+            `[RES] ts=${responseAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix}`,
+          );
+        },
+        error: (err) => {
+          const durationMs = Date.now() - now;
+          const statusCode = res?.statusCode;
+          const message = err?.message ?? String(err);
+          const errorAt = new Date().toISOString();
+          this.logger.error(
+            `[ERR] ts=${errorAt} ${method} ${url} status=${statusCode} duration=${durationMs}ms req_ts=${requestAt}${requestIdSuffix}${handlerSuffix}${ipSuffix}${userSuffix}${storeSuffix} msg=${message}`,
+            err?.stack,
+          );
+        },
+      }),
+    );
   }
 }

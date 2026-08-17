@@ -16,7 +16,9 @@ describe('OrderStationItemController', () => {
       ],
     }).compile();
 
-    controller = module.get<OrderStationItemController>(OrderStationItemController);
+    controller = module.get<OrderStationItemController>(
+      OrderStationItemController,
+    );
   });
 
   it('should be defined', () => {

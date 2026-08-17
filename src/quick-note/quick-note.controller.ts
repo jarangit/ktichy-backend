@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { QuickNoteService } from './quick-note.service';
 import { CreateQuickNoteDto } from './dto/create-quick-note.dto';
 import { UpdateQuickNoteDto } from './dto/update-quick-note.dto';
@@ -23,7 +31,10 @@ export class QuickNoteController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuickNoteDto: UpdateQuickNoteDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateQuickNoteDto: UpdateQuickNoteDto,
+  ) {
     return this.quickNoteService.update(+id, updateQuickNoteDto);
   }
 

@@ -20,10 +20,48 @@ import { Category } from '../category/entities/category.entity';
 
 @Injectable()
 export class ProductService {
+  private readonly productRelations = {
+    store: true,
+    station: true,
+    category: true,
+  } as const;
+
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
   ) {}
+
+  /** Flatten a loaded Product into the shape the POS/settings UI expects. */
+  private toView(product: Product) {
+    return {
+      id: product.id,
+      name: product.name,
+      isActive: product.isActive,
+      isBestSeller: product.isBestSeller,
+      price: Number(product.price),
+      cost: product.cost != null ? Number(product.cost) : null,
+      imageUrl: product.imageUrl,
+      storeId: product.store?.id ?? null,
+      stationId: product.station?.id ?? null,
+      categoryId: product.category?.id ?? null,
+      categoryName: product.category?.name ?? null,
+      stationName: product.station?.name ?? null,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+    };
+  }
+
+  private async findByIdWithRelations(id: string) {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: this.productRelations,
+    });
+    if (!product) {
+      throw new NotFoundException(`Product #${id} not found`);
+    }
+    return product;
+  }
+
   async create(createProductDto: CreateProductDto, userId: string) {
     const { stationId } = createProductDto;
     const storeId = createProductDto.storeId?.trim();
@@ -57,23 +95,46 @@ export class ProductService {
       );
     }
 
+    let category: any;
+    if (createProductDto.categoryId) {
+      category = await this.productRepository.manager.findOne(Category, {
+        where: { id: createProductDto.categoryId },
+        relations: { store: true },
+      });
+      if (!category) {
+        throw new NotFoundException(
+          `Category #${createProductDto.categoryId} not found`,
+        );
+      }
+      if (category.store?.id !== storeId) {
+        throw new BadRequestException(
+          `Category #${createProductDto.categoryId} does not belong to store #${storeId}`,
+        );
+      }
+    }
+
     const product = this.productRepository.create({
       id: nanoid10(),
       ...createProductDto,
       store,
       station,
+      category,
     });
-    return await this.productRepository.save(product);
+    const saved = await this.productRepository.save(product);
+    const created = await this.findByIdWithRelations(saved.id);
+    return this.toView(created);
   }
 
   findAll() {
     return `This action returns all products`;
   }
 
-  findByCategoryId(categoryId: string) {
-    return this.productRepository.find({
+  async findByCategoryId(categoryId: string) {
+    const products = await this.productRepository.find({
       where: { category: { id: categoryId } },
+      relations: this.productRelations,
     });
+    return products.map((product) => this.toView(product));
   }
 
   findOne(id: string) {
@@ -88,7 +149,8 @@ export class ProductService {
       ...relations,
     });
     await this.productRepository.save(updated);
-    return this.productRepository.findOneBy({ id });
+    const result = await this.findByIdWithRelations(id);
+    return this.toView(result);
   }
 
   async remove(id: string) {
@@ -108,13 +170,14 @@ export class ProductService {
 
     const products = await this.productRepository.find({
       where: { store: { id: normalizedStoreId } },
+      relations: this.productRelations,
     });
     if (products.length === 0) {
       throw new NotFoundException(
         `No products found for store #${normalizedStoreId}`,
       );
     }
-    return products;
+    return products.map((product) => this.toView(product));
   }
   private readonly productRelationResolvers = {
     storeId: {
