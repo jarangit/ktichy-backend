@@ -33,6 +33,17 @@ export class UploadsService {
     return { storage: this.storage, bucket };
   }
 
+  private getObjectKeyFromUrl(imageUrl: string) {
+    const { bucket } = this.ensureConfig();
+    const prefix = `https://storage.googleapis.com/${bucket}/`;
+
+    if (!imageUrl.startsWith(prefix)) {
+      return null;
+    }
+
+    return imageUrl.slice(prefix.length);
+  }
+
   async uploadProductImage(
     file: Express.Multer.File,
   ): Promise<{ imageUrl: string }> {
@@ -83,5 +94,26 @@ export class UploadsService {
     return {
       imageUrl: `https://storage.googleapis.com/${bucket}/${key}`,
     };
+  }
+
+  async deleteProductImageByUrl(imageUrl: string | null | undefined) {
+    if (!imageUrl) {
+      return;
+    }
+
+    const key = this.getObjectKeyFromUrl(imageUrl);
+    if (!key) {
+      return;
+    }
+
+    const { storage, bucket } = this.ensureConfig();
+
+    try {
+      await storage.bucket(bucket).file(key).delete({ ignoreNotFound: true });
+    } catch (error) {
+      throw new ServiceUnavailableException(
+        `Failed to delete image: ${(error as Error).message}`,
+      );
+    }
   }
 }

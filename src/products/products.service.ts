@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { nanoid10 } from '../utils/nanoid';
 import { Store } from '../stores/entities/store.entity';
 import { Station } from '../stations/entities/station.entity';
 import { Category } from '../category/entities/category.entity';
+import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
 export class ProductService {
@@ -29,6 +31,7 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly uploadsService: UploadsService,
   ) {}
 
   /** Flatten a loaded Product into the shape the POS/settings UI expects. */
@@ -60,6 +63,53 @@ export class ProductService {
       throw new NotFoundException(`Product #${id} not found`);
     }
     return product;
+  }
+
+  private async findOwnedProductWithRelations(id: string, userId: string) {
+    const product = await this.findByIdWithRelations(id);
+    const ownerId = (product.store as { owner_id?: string } | null)?.owner_id;
+
+    if (!ownerId || ownerId !== userId) {
+      throw new ForbiddenException(
+        `User #${userId} does not have access to product #${id}`,
+      );
+    }
+
+    return product;
+  }
+
+  private async findOwnedStore(id: string, userId: string) {
+    const store: any = await this.findByIdOrFail(Store, id, 'Store');
+
+    if (store.owner_id !== userId) {
+      throw new ForbiddenException(
+        `User #${userId} is not the owner of store #${id}`,
+      );
+    }
+
+    return store;
+  }
+
+  private async findCategoryInStore(categoryId: string, storeId: string) {
+    const category: any = await this.productRepository.manager.findOne(
+      Category,
+      {
+        where: { id: categoryId },
+        relations: { store: true },
+      },
+    );
+
+    if (!category) {
+      throw new NotFoundException(`Category #${categoryId} not found`);
+    }
+
+    if (category.store?.id !== storeId) {
+      throw new BadRequestException(
+        `Category #${categoryId} does not belong to store #${storeId}`,
+      );
+    }
+
+    return category;
   }
 
   async create(createProductDto: CreateProductDto, userId: string) {
@@ -137,24 +187,45 @@ export class ProductService {
     return products.map((product) => this.toView(product));
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} product`;
+  async findOne(id: string) {
+    const product = await this.findByIdWithRelations(id);
+    return this.toView(product);
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
-    const relations = await this.resolveRelations(updateProductDto);
-    const product = await this.findByIdOrFail(Product, id, 'Product');
+  async update(id: string, updateProductDto: UpdateProductDto, userId: string) {
+    const product = await this.findOwnedProductWithRelations(id, userId);
+    const previousImageUrl = product.imageUrl;
+    const relations = await this.resolveRelations(
+      updateProductDto,
+      userId,
+      product.store?.id,
+    );
     const updated = this.productRepository.merge(product, {
       ...updateProductDto,
       ...relations,
     });
     await this.productRepository.save(updated);
     const result = await this.findByIdWithRelations(id);
+
+    if (
+      previousImageUrl &&
+      previousImageUrl !== result.imageUrl &&
+      !this.isProductUsingImage(previousImageUrl, result)
+    ) {
+      await this.uploadsService.deleteProductImageByUrl(previousImageUrl);
+    }
+
     return this.toView(result);
   }
 
-  async remove(id: string) {
+  async remove(id: string, userId: string) {
+    const product = await this.findOwnedProductWithRelations(id, userId);
     await this.productRepository.delete(id);
+
+    if (product.imageUrl) {
+      await this.uploadsService.deleteProductImageByUrl(product.imageUrl);
+    }
+
     return { message: `Product #${id} has been removed` };
   }
 
@@ -179,24 +250,6 @@ export class ProductService {
     }
     return products.map((product) => this.toView(product));
   }
-  private readonly productRelationResolvers = {
-    storeId: {
-      entity: Store,
-      relation: 'store',
-      label: 'Store',
-    },
-    stationId: {
-      entity: Station,
-      relation: 'station',
-      label: 'Station',
-    },
-    categoryId: {
-      entity: Category,
-      relation: 'category',
-      label: 'Category',
-    },
-  } as const;
-
   private async findByIdOrFail<Entity extends ObjectLiteral>(
     target: EntityTarget<Entity>,
     id: string,
@@ -212,22 +265,55 @@ export class ProductService {
 
     return entity;
   }
-  private async resolveRelations(updateProductDto: UpdateProductDto) {
+
+  private isProductUsingImage(
+    imageUrl: string,
+    product: { imageUrl?: string | null },
+  ) {
+    return product.imageUrl === imageUrl;
+  }
+
+  private async resolveRelations(
+    updateProductDto: UpdateProductDto,
+    userId: string,
+    currentStoreId?: string | null,
+  ) {
     const relations: Record<string, unknown> = {};
 
-    for (const [dtoField, config] of Object.entries(
-      this.productRelationResolvers,
-    )) {
-      const id = updateProductDto[dtoField];
+    let targetStoreId = currentStoreId ?? null;
 
-      if (!id) {
-        continue;
+    if (updateProductDto.storeId) {
+      const store = await this.findOwnedStore(updateProductDto.storeId, userId);
+      relations.store = store;
+      targetStoreId = store.id;
+    }
+
+    if (updateProductDto.stationId) {
+      const station: any = await this.findByIdOrFail(
+        Station,
+        updateProductDto.stationId,
+        'Station',
+      );
+
+      if (targetStoreId && station.storeId !== targetStoreId) {
+        throw new BadRequestException(
+          `Station #${updateProductDto.stationId} does not belong to store #${targetStoreId}`,
+        );
       }
 
-      relations[config.relation] = await this.findByIdOrFail(
-        config.entity,
-        id,
-        config.label,
+      relations.station = station;
+    }
+
+    if (updateProductDto.categoryId) {
+      if (!targetStoreId) {
+        throw new BadRequestException(
+          'storeId is required when assigning a category',
+        );
+      }
+
+      relations.category = await this.findCategoryInStore(
+        updateProductDto.categoryId,
+        targetStoreId,
       );
     }
 

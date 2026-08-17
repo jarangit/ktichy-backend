@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Min,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -38,7 +39,8 @@ export class CreateProductDto {
   @IsBoolean()
   isBestSeller?: boolean;
 
+  @ValidateIf((_obj, value) => value !== null)
   @IsOptional()
   @IsString()
-  imageUrl?: string;
+  imageUrl?: string | null;
 }

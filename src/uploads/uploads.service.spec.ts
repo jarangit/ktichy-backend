@@ -5,6 +5,8 @@ import { UploadsService } from './uploads.service';
 // eslint-disable-next-line no-var
 var saveMock: jest.Mock;
 // eslint-disable-next-line no-var
+var deleteMock: jest.Mock;
+// eslint-disable-next-line no-var
 var toBufferMock: jest.Mock;
 
 jest.mock('sharp', () => {
@@ -19,10 +21,11 @@ jest.mock('sharp', () => {
 
 jest.mock('@google-cloud/storage', () => {
   saveMock = jest.fn().mockResolvedValue(undefined);
+  deleteMock = jest.fn().mockResolvedValue(undefined);
   return {
     Storage: jest.fn().mockImplementation(() => ({
       bucket: jest.fn(() => ({
-        file: jest.fn(() => ({ save: saveMock })),
+        file: jest.fn(() => ({ save: saveMock, delete: deleteMock })),
       })),
     })),
   };
@@ -36,6 +39,7 @@ describe('UploadsService', () => {
     process.env.GCS_BUCKET = 'kitchy-product-images';
     jest.clearAllMocks();
     saveMock.mockResolvedValue(undefined);
+    deleteMock.mockResolvedValue(undefined);
     toBufferMock.mockResolvedValue(Buffer.from('webp-data'));
     service = new UploadsService();
   });
@@ -120,5 +124,19 @@ describe('UploadsService', () => {
         size: 10,
       } as Express.Multer.File),
     ).rejects.toThrow('GCS_PROJECT_ID and GCS_BUCKET must be set');
+  });
+
+  it('deletes a bucket-owned image by URL', async () => {
+    await service.deleteProductImageByUrl(
+      'https://storage.googleapis.com/kitchy-product-images/products/x.webp',
+    );
+
+    expect(deleteMock).toHaveBeenCalledWith({ ignoreNotFound: true });
+  });
+
+  it('ignores external image URLs during delete', async () => {
+    await service.deleteProductImageByUrl('https://example.com/image.webp');
+
+    expect(deleteMock).not.toHaveBeenCalled();
   });
 });

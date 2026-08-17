@@ -1,11 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProductService } from './products.service';
 import { Product } from './entities/product.entity';
+import { UploadsService } from '../uploads/uploads.service';
 
 describe('ProductsService', () => {
   let service: ProductService;
+  const uploadsService = {
+    deleteProductImageByUrl: jest.fn(),
+  };
 
   const manager = {
     findOne: jest.fn(),
@@ -31,6 +39,10 @@ describe('ProductsService', () => {
         {
           provide: getRepositoryToken(Product),
           useValue: mockRepo,
+        },
+        {
+          provide: UploadsService,
+          useValue: uploadsService,
         },
       ],
     }).compile();
@@ -178,6 +190,169 @@ describe('ProductsService', () => {
 
       await expect(service.findByStoreId('store-1')).rejects.toThrow(
         NotFoundException,
+      );
+    });
+  });
+
+  describe('findOne', () => {
+    it('returns a flattened product view', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'prod-1',
+        name: 'ข้าวผัดกุ้ง',
+        price: '60.00',
+        cost: '30.00',
+        isBestSeller: true,
+        isActive: true,
+        imageUrl: null,
+        createdAt: new Date('2026-01-01'),
+        updatedAt: new Date('2026-01-01'),
+        store: { id: 'store-1' },
+        station: { id: 'station-1', name: 'ครัว' },
+        category: { id: 'cat-1', name: 'ข้าว' },
+      });
+
+      const result = await service.findOne('prod-1');
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: 'prod-1',
+          price: 60,
+          categoryName: 'ข้าว',
+          stationName: 'ครัว',
+        }),
+      );
+    });
+  });
+
+  describe('update', () => {
+    it('allows the owner to clear imageUrl with null', async () => {
+      mockRepo.findOne
+        .mockResolvedValueOnce({
+          id: 'prod-1',
+          name: 'ข้าวผัดกุ้ง',
+          price: '60.00',
+          cost: '30.00',
+          isBestSeller: true,
+          isActive: true,
+          imageUrl: 'https://img',
+          createdAt: new Date('2026-01-01'),
+          updatedAt: new Date('2026-01-01'),
+          store: { id: 'store-1', owner_id: 'user-1' },
+          station: { id: 'station-1', name: 'ครัว' },
+          category: { id: 'cat-1', name: 'ข้าว' },
+        })
+        .mockResolvedValueOnce({
+          id: 'prod-1',
+          name: 'ข้าวผัดกุ้ง',
+          price: '60.00',
+          cost: '30.00',
+          isBestSeller: true,
+          isActive: true,
+          imageUrl: null,
+          createdAt: new Date('2026-01-01'),
+          updatedAt: new Date('2026-01-01'),
+          store: { id: 'store-1', owner_id: 'user-1' },
+          station: { id: 'station-1', name: 'ครัว' },
+          category: { id: 'cat-1', name: 'ข้าว' },
+        });
+      mockRepo.save.mockResolvedValue(undefined);
+
+      const result = await service.update(
+        'prod-1',
+        { imageUrl: null },
+        'user-1',
+      );
+
+      expect(mockRepo.merge).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'prod-1' }),
+        expect.objectContaining({ imageUrl: null }),
+      );
+      expect(uploadsService.deleteProductImageByUrl).toHaveBeenCalledWith(
+        'https://img',
+      );
+      expect(result).toEqual(expect.objectContaining({ imageUrl: null }));
+    });
+
+    it('deletes the old image when a new one replaces it', async () => {
+      mockRepo.findOne
+        .mockResolvedValueOnce({
+          id: 'prod-1',
+          name: 'ข้าวผัดกุ้ง',
+          price: '60.00',
+          cost: '30.00',
+          isBestSeller: true,
+          isActive: true,
+          imageUrl: 'https://old-image',
+          createdAt: new Date('2026-01-01'),
+          updatedAt: new Date('2026-01-01'),
+          store: { id: 'store-1', owner_id: 'user-1' },
+          station: { id: 'station-1', name: 'ครัว' },
+          category: { id: 'cat-1', name: 'ข้าว' },
+        })
+        .mockResolvedValueOnce({
+          id: 'prod-1',
+          name: 'ข้าวผัดกุ้ง',
+          price: '60.00',
+          cost: '30.00',
+          isBestSeller: true,
+          isActive: true,
+          imageUrl: 'https://new-image',
+          createdAt: new Date('2026-01-01'),
+          updatedAt: new Date('2026-01-01'),
+          store: { id: 'store-1', owner_id: 'user-1' },
+          station: { id: 'station-1', name: 'ครัว' },
+          category: { id: 'cat-1', name: 'ข้าว' },
+        });
+      mockRepo.save.mockResolvedValue(undefined);
+
+      await service.update(
+        'prod-1',
+        { imageUrl: 'https://new-image' },
+        'user-1',
+      );
+
+      expect(uploadsService.deleteProductImageByUrl).toHaveBeenCalledWith(
+        'https://old-image',
+      );
+    });
+
+    it('rejects updates from a non-owner', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'prod-1',
+        store: { id: 'store-1', owner_id: 'someone-else' },
+      });
+
+      await expect(
+        service.update('prod-1', { price: 70 }, 'user-1'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe('remove', () => {
+    it('deletes the product image after deleting the product', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'prod-1',
+        imageUrl: 'https://img',
+        store: { id: 'store-1', owner_id: 'user-1' },
+      });
+      mockRepo.delete.mockResolvedValue(undefined);
+
+      await service.remove('prod-1', 'user-1');
+
+      expect(mockRepo.delete).toHaveBeenCalledWith('prod-1');
+      expect(uploadsService.deleteProductImageByUrl).toHaveBeenCalledWith(
+        'https://img',
+      );
+    });
+
+    it('rejects deletes from a non-owner', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'prod-1',
+        store: { id: 'store-1', owner_id: 'someone-else' },
+      });
+
+      await expect(service.remove('prod-1', 'user-1')).rejects.toThrow(
+        ForbiddenException,
       );
     });
   });
