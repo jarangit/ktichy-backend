@@ -29,6 +29,50 @@ export class OrdersService {
     private readonly orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
 
+  private async buildOrderItems(
+    products: CreateOrderDto['products'],
+  ): Promise<OrderItem[]> {
+    const items: OrderItem[] = [];
+
+    for (const item of products) {
+      // Validate product item
+      if (!item.productId || !item.quantity) {
+        throw new BadRequestException('Product ID and quantity are required');
+      }
+
+      // Find product with station relation
+      const product = await this.productRepository.findOne({
+        where: { id: item.productId },
+        relations: ['station'],
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product #${item.productId} not found`);
+      }
+
+      // Create order item with price/name snapshot (keeps history stable
+      // even if the product price or name changes later)
+      const orderItem = this.orderItemRepository.create({
+        product,
+        quantity: item.quantity,
+        notes: item.note,
+        price: product.price,
+        name: product.name,
+      });
+
+      // Create station item for this order item
+      const stationItems = this.orderStationItemRepository.create({
+        station: product.station,
+        status: 'pending',
+      });
+
+      orderItem.stationItems = [stationItems];
+      items.push(orderItem);
+    }
+
+    return items;
+  }
+
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const { products, storeId, orderNumber } = createOrderDto;
     const normalizedStoreId = storeId?.trim();
@@ -53,41 +97,16 @@ export class OrdersService {
     const order = this.orderRepository.create({
       orderNumber,
       store,
+      orderType: createOrderDto.orderType,
+      tableNumber: createOrderDto.tableNumber ?? null,
+      customerName: createOrderDto.customerName ?? null,
+      deliveryPlatform: createOrderDto.deliveryPlatform ?? null,
+      deliveryOrderNumber: createOrderDto.deliveryOrderNumber ?? null,
+      isWaitingInStore: createOrderDto.isWaitingInStore ?? false,
       items: [],
     });
 
-    // Process each product in the order
-    for (const item of products) {
-      // Validate product item
-      if (!item.productId || !item.quantity) {
-        throw new BadRequestException('Product ID and quantity are required');
-      }
-
-      // Find product with station relation
-      const product = await this.productRepository.findOne({
-        where: { id: item.productId },
-        relations: ['station'],
-      });
-
-      if (!product) {
-        throw new NotFoundException(`Product #${item.productId} not found`);
-      }
-
-      // Create order item
-      const orderItem = this.orderItemRepository.create({
-        product,
-        quantity: item.quantity,
-      });
-
-      // Create station item for this order item
-      const stationItems = this.orderStationItemRepository.create({
-        station: product.station,
-        status: 'pending',
-      });
-
-      orderItem.stationItems = [stationItems];
-      order.items.push(orderItem);
-    }
+    order.items = await this.buildOrderItems(products);
 
     return await this.orderRepository.save(order);
   }
@@ -110,13 +129,27 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    const order = await this.orderRepository.findOneBy({ id });
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['items'],
+    });
 
     if (!order) {
       throw new NotFoundException(`Order #${id} not found`);
     }
 
-    Object.assign(order, updateOrderDto);
+    const { products, ...rest } = updateOrderDto;
+    Object.assign(order, rest);
+
+    // Replace order items when the payload includes a product list
+    // (e.g. editing an order from the transaction detail page).
+    if (products && products.length) {
+      if (order.items?.length) {
+        await this.orderItemRepository.delete(order.items.map((i) => i.id));
+      }
+      order.items = await this.buildOrderItems(products);
+    }
+
     return this.orderRepository.save(order);
   }
 

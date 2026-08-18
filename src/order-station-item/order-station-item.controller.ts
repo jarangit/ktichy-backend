@@ -8,7 +8,6 @@ import {
   Delete,
 } from '@nestjs/common';
 import { OrderStationItemService } from './order-station-item.service';
-import { CreateOrderStationItemDto } from './dto/create-order-station-item.dto';
 import { UpdateOrderStationItemDto } from './dto/update-order-station-item.dto';
 
 @Controller('order-station-item')
@@ -18,8 +17,8 @@ export class OrderStationItemController {
   ) {}
 
   @Post()
-  create(@Body() createOrderStationItemDto: CreateOrderStationItemDto) {
-    return this.orderStationItemService.create(createOrderStationItemDto);
+  create() {
+    return this.orderStationItemService.create();
   }
 
   @Get()

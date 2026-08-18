@@ -17,8 +17,10 @@ import { PairingRequestsModule } from './pairing-requests/pairing-requests.modul
 import { CategoryModule } from './category/category.module';
 import { QuickNoteModule } from './quick-note/quick-note.module';
 import { UserIdentitiesModule } from './user_identities/user_identities.module';
-import { OtpCodesModule } from './otp_codes/otp_codes.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { PaymentsModule } from './payments/payments.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { ReportsModule } from './reports/reports.module';
 
 const infrastructureModules = [
   TypeOrmModule.forRoot({
@@ -46,6 +48,9 @@ const featureModules = [
   DevicesModule,
   PairingCodesModule,
   PairingRequestsModule,
+  PaymentsModule,
+  TransactionsModule,
+  ReportsModule,
 ];
 
 @Module({
@@ -55,7 +60,6 @@ const featureModules = [
     CategoryModule,
     QuickNoteModule,
     UserIdentitiesModule,
-    OtpCodesModule,
     UploadsModule,
   ],
   controllers: [AppController],

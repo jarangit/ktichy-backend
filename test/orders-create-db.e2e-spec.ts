@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { User } from '../src/users/entities/user.entity';
 import { Store } from '../src/stores/entities/store.entity';
 import { Station } from '../src/stations/entities/station.entity';
@@ -28,6 +28,7 @@ describe('Orders Create API (e2e, real DB)', () => {
   let seededStore: Store;
   let seededStation: Station;
   let seededProduct: Product;
+  let createdOrderId: string | undefined;
 
   beforeAll(async () => {
     process.env.DB_HOST = 'localhost';
@@ -62,6 +63,7 @@ describe('Orders Create API (e2e, real DB)', () => {
     seededUser = await userRepo.save(
       userRepo.create({
         email: `orders-db-${unique}@test.local`,
+        username: `user-${unique}`,
         passwordHash: 'hash-for-test',
       }),
     );
@@ -91,10 +93,26 @@ describe('Orders Create API (e2e, real DB)', () => {
   });
 
   afterEach(async () => {
-    if (seededUser?.id) {
-      // Deleting owner cascades to store, station, product, and created orders/items.
-      await userRepo.delete(seededUser.id);
+    if (!seededUser?.id) return;
+
+    if (createdOrderId) {
+      const itemIds = (
+        await orderItemRepo.find({
+          where: { order: { id: createdOrderId } },
+          select: ['id'],
+        })
+      ).map((i) => i.id);
+      if (itemIds.length) {
+        await orderStationItemRepo.delete({ orderItem: { id: In(itemIds) } });
+        await orderItemRepo.delete({ order: { id: createdOrderId } });
+      }
+      await orderRepo.delete(createdOrderId);
     }
+
+    await productRepo.delete({ store: { id: seededStore.id } });
+    await stationRepo.delete(seededStation.id);
+    await storeRepo.delete(seededStore.id);
+    await userRepo.delete(seededUser.id);
   });
 
   afterAll(async () => {
@@ -115,6 +133,7 @@ describe('Orders Create API (e2e, real DB)', () => {
       .send(payload)
       .expect(201);
 
+    createdOrderId = response.body.id;
     expect(response.body.id).toBeDefined();
     expect(response.body.orderNumber).toBe(payload.orderNumber);
 

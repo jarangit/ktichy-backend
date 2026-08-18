@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Store } from '../../stores/entities/store.entity';
+import { DeviceStatus } from '../entities/device.entity';
 
 export class CreateDeviceDto {
   @IsString()
@@ -21,6 +22,10 @@ export class CreateDeviceDto {
   @IsOptional()
   @IsString()
   alias?: string;
+
+  @IsOptional()
+  @IsEnum(DeviceStatus)
+  status?: DeviceStatus;
 
   @IsOptional()
   @IsString()

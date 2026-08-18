@@ -11,9 +11,9 @@ Kitchen Display System (KDS) backend for restaurant order management.
 - **Scheduling**: @nestjs/schedule (registered, no cron jobs yet)
 - **Monitoring**: Sentry (@sentry/nestjs + profiling)
 - **IDs**: nanoid 10-char string PKs via `src/utils/nanoid.ts` (`nanoid10()`)
-- **Validation**: class-validator + class-transformer installed (ValidationPipe NOT enabled in main.ts)
+- **Validation**: class-validator + class-transformer (ValidationPipe enabled in main.ts with `whitelist` + `transform`)
 - **API prefix**: `/api/v1`
-- **Default port**: 8080
+- **Default port**: 3000
 - **Container**: Docker + docker-compose
 
 ## Project Structure
@@ -26,9 +26,15 @@ src/
   stations/           # Kitchen station CRUD (station.storeId -> store)
   products/           # Menu product CRUD (product.stationId -> station)
   orders/             # Order CRUD (order.storeId -> store)
-  order-station-item/ # Links order items to stations (pending/complete)
+  order-station-item/ # Links order items to stations (pending/complete/served)
+  payments/           # Payment per order (CASH/QR/DELIVERY_PLATFORM, receiptId = orderNumber)
+  transactions/       # Read view of Order + Payment (GET/PATCH /transactions)
+  reports/            # Aggregations (GET /reports, presets today/week/month)
+  category/           # Menu category CRUD (soft delete via isActive=false)
+  quick-note/         # Per-store quick notes (text <= 60, PUT bulk replace)
   devices/            # Physical display devices
   pairing-codes/      # Pairing code generation for device-to-station linking
+  pairing-requests/   # Device pairing approval (only approve endpoint wired)
   common/             # Filters, interceptors
   utils/              # nanoid helpers
   db/                 # Data source + migrations
@@ -62,11 +68,10 @@ Each feature: `entity -> DTO -> service -> controller -> module -> register in a
 
 ### Known Issues (Active)
 
-1. `ValidationPipe` NOT enabled in `main.ts`
-2. `synchronize: true` in TypeORM config (should use migrations in production)
-3. `nanoid` uses `Math.random()` (not cryptographically secure)
-4. Several endpoints missing auth guards and ownership checks
-5. Pairing flow incomplete (pairing-requests module not yet created)
+1. `synchronize: false` in TypeORM config — all schema changes go through migrations
+2. `nanoid` uses `Math.random()` (not cryptographically secure)
+3. Ownership guards only on some write endpoints (orders remove, category, quick-note, pairing-requests); stores/stations/products writes still lack store-owner checks
+4. Pairing flow partial: pairing-codes create/join auto-create a PAIRED device; nothing creates a `PairingRequest` yet (approve endpoint is orphaned)
 
 ## Commands
 
@@ -92,12 +97,16 @@ User (owner)
               |            +-- 1:1 --> PairingCode
               +-- 1:N --> Order
               |            +-- 1:N --> OrderItem --> 1:N --> OrderStationItem
+              |            +-- 1:N --> Payment
               +-- 1:N --> Device (display hardware)
+              +-- 1:N --> Category (soft-deletable, products reference it)
+              +-- 1:N --> QuickNote
 ```
 
 Statuses:
 
-- Order: `NEW -> PREPARING -> READY`
-- OrderStationItem: `pending -> complete`
+- Order: `NEW -> PREPARING -> READY -> COMPLETED | CANCELLED`
+- OrderStationItem: `pending -> complete -> served`
 - Device: `PENDING -> PAIRED`
 - PairingCode: `PENDING -> EXPIRED | CLOSED`
+- Payment: `PAID | REFUNDED`

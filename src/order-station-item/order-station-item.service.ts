@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateOrderStationItemDto } from './dto/create-order-station-item.dto';
 import { UpdateOrderStationItemDto } from './dto/update-order-station-item.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,7 +10,7 @@ export class OrderStationItemService {
     @InjectRepository(OrderStationItem)
     private readonly orderStationItemRepository: Repository<OrderStationItem>,
   ) {}
-  create(createOrderStationItemDto: CreateOrderStationItemDto) {
+  create() {
     return 'This action adds a new orderStationItem';
   }
 

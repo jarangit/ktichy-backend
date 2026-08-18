@@ -89,7 +89,10 @@ describe('Orders Create API (e2e)', () => {
     const station = { id: 'station123' } as any;
     const product = { id: 'product123', station } as Product;
 
-    orderRepositoryMock.create.mockReturnValue({ items: [] });
+    orderRepositoryMock.create.mockImplementation((payload) => ({
+      items: [],
+      ...payload,
+    }));
     orderRepositoryMock.manager.findOne.mockResolvedValue(store);
     productRepositoryMock.findOne.mockResolvedValue(product);
 
@@ -150,7 +153,10 @@ describe('Orders Create API (e2e)', () => {
   });
 
   it('POST /api/v1/orders should return 400 when productId or quantity is missing', async () => {
-    orderRepositoryMock.create.mockReturnValue({ items: [] });
+    orderRepositoryMock.create.mockImplementation((payload) => ({
+      items: [],
+      ...payload,
+    }));
     orderRepositoryMock.manager.findOne.mockResolvedValue({ id: 'store123' });
 
     await request(app.getHttpServer())

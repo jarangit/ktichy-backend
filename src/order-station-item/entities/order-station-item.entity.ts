@@ -23,7 +23,7 @@ export class OrderStationItem {
   orderItem: OrderItem;
 
   @Column({ default: 'pending' })
-  status: 'pending' | 'complete';
+  status: 'pending' | 'complete' | 'served';
 
   @BeforeInsert()
   generateId() {

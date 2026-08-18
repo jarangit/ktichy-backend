@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { GoogleLoginDto } from './dto/google-login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -63,7 +62,7 @@ export class UsersService {
     return `This action returns a #${id} user`;
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
+  update(id: string) {
     return `This action updates a #${id} user`;
   }
 
