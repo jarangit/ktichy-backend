@@ -18,6 +18,8 @@ import { CategoryModule } from './category/category.module';
 import { QuickNoteModule } from './quick-note/quick-note.module';
 import { UserIdentitiesModule } from './user_identities/user_identities.module';
 import { OtpCodesModule } from './otp_codes/otp_codes.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { ReportsModule } from './reports/reports.module';
 
 const infrastructureModules = [
   TypeOrmModule.forRoot({
@@ -55,6 +57,8 @@ const featureModules = [
     QuickNoteModule,
     UserIdentitiesModule,
     OtpCodesModule,
+    TransactionsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

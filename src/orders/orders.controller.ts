@@ -12,6 +12,7 @@ import {
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { CreatePaymentDto } from '../transactions/dto/create-payment.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
 @Controller('orders')
@@ -60,5 +61,10 @@ export class OrdersController {
   @Get('station/:stationId')
   findByStationId(@Param('stationId') stationId: string) {
     return this.ordersService.findByStationId(stationId);
+  }
+
+  @Post(':id/pay')
+  pay(@Param('id') id: string, @Body() createPaymentDto: CreatePaymentDto) {
+    return this.ordersService.pay(id, createPaymentDto);
   }
 }

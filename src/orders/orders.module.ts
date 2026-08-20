@@ -7,11 +7,13 @@ import { OrderItem } from './entities/order-item.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { TransactionsModule } from '../transactions/transactions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderItem, OrderStationItem, Product]),
     JwtModule,
+    TransactionsModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

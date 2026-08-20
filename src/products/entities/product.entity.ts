@@ -40,6 +40,30 @@ export class Product {
   @Column()
   name: string;
 
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => (value === null ? null : Number(value)),
+    },
+  })
+  price: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => (value === null ? null : Number(value)),
+    },
+  })
+  cost?: number;
+
   @Column({ default: true })
   isActive: boolean;
 

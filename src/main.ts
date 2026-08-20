@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DatabaseExceptionFilter } from './common/filters/db-exception.filter';
 import './intrument';
@@ -14,6 +15,7 @@ async function bootstrap() {
     origin: process.env.CLIENT_URL, // ✅ ใส่ origin ของ frontend
     credentials: true, // ถ้ามี cookie/session
   });
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new DatabaseExceptionFilter());
   app.useGlobalInterceptors(
     new ResponseInterceptor(),

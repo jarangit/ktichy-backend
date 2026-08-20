@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AppJwtPayload } from '../auth/type';
+import { nanoid10 } from '../utils/nanoid';
 
 @Injectable()
 export class UsersService {
@@ -41,8 +42,22 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const base = email ? email.split('@')[0] : `user${Date.now()}`;
+    let username = base;
+    let usernameTaken = await this.userRepository.findOne({
+      where: { username },
+    });
+    let attempts = 0;
+    while (usernameTaken && attempts < 10) {
+      attempts += 1;
+      username = `${base}_${nanoid10()}`;
+      usernameTaken = await this.userRepository.findOne({
+        where: { username },
+      });
+    }
     const user = this.userRepository.create({
       email: email ?? null,
+      username,
       phoneNumber: phoneNumber ?? null,
       passwordHash,
     });

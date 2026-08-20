@@ -17,6 +17,14 @@ export enum OrderStatus {
   NEW = 'NEW',
   PREPARING = 'PREPARING',
   READY = 'READY',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum OrderType {
+  DINE_IN = 'DINE_IN',
+  TOGO = 'TOGO',
+  DELIVERY = 'DELIVERY',
 }
 
 @Entity()
@@ -33,6 +41,28 @@ export class Order {
     default: OrderStatus.NEW,
   })
   status: OrderStatus;
+
+  @Column({
+    type: 'enum',
+    enum: OrderType,
+    nullable: true,
+  })
+  orderType?: OrderType;
+
+  @Column({ nullable: true })
+  tableNumber?: string;
+
+  @Column({ nullable: true })
+  customerName?: string;
+
+  @Column({ nullable: true })
+  deliveryPlatform?: string;
+
+  @Column({ nullable: true })
+  deliveryOrderNumber?: string;
+
+  @Column({ default: false })
+  isWaitingInStore?: boolean;
 
   @Column({ default: false })
   isArchived: boolean;
