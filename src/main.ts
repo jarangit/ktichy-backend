@@ -15,7 +15,12 @@ async function bootstrap() {
     origin: process.env.CLIENT_URL, // ✅ ใส่ origin ของ frontend
     credentials: true, // ถ้ามี cookie/session
   });
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
   app.useGlobalFilters(new DatabaseExceptionFilter());
   app.useGlobalInterceptors(
     new ResponseInterceptor(),

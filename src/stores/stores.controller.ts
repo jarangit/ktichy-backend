@@ -31,8 +31,9 @@ export class StoresController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req: any) {
-    const userId = req.user?.sub;
-    return this.storesService.findOne(id, userId);
+    const userId = req.user?.sub ?? req.device?.store;
+    const isDevice = Boolean(req.device);
+    return this.storesService.findOne(id, userId, isDevice);
   }
 
   @UseGuards(JwtAuthGuard)

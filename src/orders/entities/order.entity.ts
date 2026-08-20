@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { OrderItem } from './order-item.entity';
 import { Store } from '../../stores/entities/store.entity';
+import { Payment } from '../../payments/entities/payment.entity';
 import { nanoid10 } from '../../utils/nanoid';
 
 export enum OrderStatus {
@@ -42,27 +43,23 @@ export class Order {
   })
   status: OrderStatus;
 
-  @Column({
-    type: 'enum',
-    enum: OrderType,
-    nullable: true,
-  })
-  orderType?: OrderType;
+  @Column({ type: 'enum', enum: OrderType, default: OrderType.DINE_IN })
+  orderType: OrderType;
 
-  @Column({ nullable: true })
-  tableNumber?: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  tableNumber: string | null;
 
-  @Column({ nullable: true })
-  customerName?: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  customerName: string | null;
 
-  @Column({ nullable: true })
-  deliveryPlatform?: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  deliveryPlatform: string | null;
 
-  @Column({ nullable: true })
-  deliveryOrderNumber?: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  deliveryOrderNumber: string | null;
 
   @Column({ default: false })
-  isWaitingInStore?: boolean;
+  isWaitingInStore: boolean;
 
   @Column({ default: false })
   isArchived: boolean;
@@ -84,6 +81,9 @@ export class Order {
     onDelete: 'CASCADE',
   })
   items: OrderItem[];
+
+  @OneToMany(() => Payment, (payment) => payment.order)
+  payments: Payment[];
 
   // @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
   //   cascade: true,

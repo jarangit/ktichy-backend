@@ -29,9 +29,9 @@ export class User {
   @Column({ unique: true, nullable: true })
   phoneNumber: string | null;
 
-  @Column({ select: false })
+  @Column({ select: false, nullable: true })
   @Exclude()
-  passwordHash: string;
+  passwordHash: string | null;
 
   // I want to add status  to the user entity to indicate if the user is active or not. This will be a boolean field that defaults to true.
   @Column({

@@ -15,10 +15,6 @@ export class StoresService {
   async create(createStoreDto: CreateStoreDto) {
     const { userId, name } = createStoreDto;
 
-    const existing = await this.storeRepository.findOne({
-      where: { owner_id: userId },
-    });
-
     const store = this.storeRepository.create({
       name,
       owner_id: userId,
@@ -31,10 +27,10 @@ export class StoresService {
     return `This action returns all stores`;
   }
 
-  async findOne(id: string, userId: string) {
+  async findOne(id: string, userId: string, isDevice = false) {
     try {
       const store = await this.storeRepository.findOne({
-        where: { id, owner_id: userId },
+        where: isDevice ? { id } : { id, owner_id: userId },
       });
 
       if (!store) {

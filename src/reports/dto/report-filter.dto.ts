@@ -1,21 +1,20 @@
-import { Transform } from 'class-transformer';
-import { IsIn, IsOptional, IsString, Matches } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-const PRESETS = ['today', 'week', 'month'] as const;
-export type DateRangePreset = (typeof PRESETS)[number];
+export enum ReportPreset {
+  TODAY = 'today',
+  WEEK = 'week',
+  MONTH = 'month',
+}
 
 export class ReportFilterDto {
   @IsString()
+  @IsNotEmpty()
   storeId: string;
 
-  @Transform(({ value }) => value as DateRangePreset)
-  @IsIn(PRESETS)
-  preset: DateRangePreset;
+  @IsEnum(ReportPreset)
+  preset: ReportPreset;
 
   @IsOptional()
   @IsString()
-  @Matches(/^\d{4}-\d{2}$/, {
-    message: 'month must be in YYYY-MM format',
-  })
   month?: string;
 }

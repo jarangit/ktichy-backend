@@ -21,28 +21,13 @@ export class OrderItem {
 
   @Column({
     type: 'enum',
-    enum: ['NEW', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED'],
+    enum: ['NEW', 'PREPARING', 'READY'],
     default: 'NEW',
   })
-  status: 'NEW' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
+  status: 'NEW' | 'PREPARING' | 'READY';
 
   @ManyToOne(() => Product)
   product: Product;
-
-  @Column({ nullable: true })
-  name: string;
-
-  @Column({
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => (value === null ? null : Number(value)),
-    },
-  })
-  price: number;
 
   @OneToMany(() => OrderStationItem, (osi) => osi.orderItem, {
     cascade: true,
@@ -57,6 +42,12 @@ export class OrderItem {
 
   @Column({ nullable: true })
   notes: string;
+
+  @Column({ type: 'varchar', length: 255 })
+  name: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  price: number;
 
   @Column()
   quantity: number;

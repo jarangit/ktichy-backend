@@ -1,9 +1,11 @@
 import {
+  IsBoolean,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   Min,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -24,13 +26,21 @@ export class CreateProductDto {
   @IsNotEmpty()
   categoryId?: string;
 
-  @IsOptional()
   @IsNumber()
   @Min(0)
-  price?: number;
+  price: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
   cost?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isBestSeller?: boolean;
+
+  @ValidateIf((_obj, value) => value !== null)
+  @IsOptional()
+  @IsString()
+  imageUrl?: string | null;
 }

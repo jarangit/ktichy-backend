@@ -110,7 +110,9 @@ export class PairingCodesService {
     await this.pairingCodeRepository.save(pairingCode);
 
     return {
-      access_token: this.generateToken(device),
+      access_token: this.generateToken(device).access_token,
+      storeId: pairingCode.storeId,
+      stationId: pairingCode.stationId,
     };
   }
 
@@ -170,6 +172,11 @@ export class PairingCodesService {
     const pairingCode = await this.pairingCodeRepository.findOne({
       where: { code, status: PairingCodeStatus.PENDING },
     });
+
+    if (!pairingCode) {
+      throw new NotFoundException('Pairing code not found');
+    }
+
     const station = await this.stationRepository.findOne({
       where: { id: pairingCode.stationId },
     });
@@ -177,10 +184,6 @@ export class PairingCodesService {
       throw new NotFoundException(
         `Station #${pairingCode.stationId} not found`,
       );
-    }
-
-    if (!pairingCode) {
-      throw new NotFoundException('Pairing code not found');
     }
 
     return pairingCode;

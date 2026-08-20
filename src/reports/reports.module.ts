@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtModule } from '@nestjs/jwt';
 import { ReportsService } from './reports.service';
 import { ReportsController } from './reports.controller';
-import { Transaction } from '../transactions/entities/transaction.entity';
-import { Store } from '../stores/entities/store.entity';
+import { Payment } from '../payments/entities/payment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Transaction, Store]), JwtModule],
+  imports: [TypeOrmModule.forFeature([Payment])],
   controllers: [ReportsController],
   providers: [ReportsService],
 })

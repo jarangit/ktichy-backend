@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
 @Controller('users')
@@ -32,6 +32,11 @@ export class UsersController {
     return await this.usersService.create(createUserDto);
   }
 
+  @Post('google-login')
+  async googleLogin(@Body() googleLoginDto: GoogleLoginDto) {
+    return this.usersService.googleLogin(googleLoginDto);
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();
@@ -43,8 +48,8 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  update(@Param('id') id: string) {
+    return this.usersService.update(id);
   }
 
   @Delete(':id')

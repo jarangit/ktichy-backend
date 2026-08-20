@@ -17,6 +17,7 @@ export class CreateOrderProductDto {
   @IsNotEmpty()
   productId: string;
 
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   quantity: number;
@@ -35,9 +36,8 @@ export class CreateOrderDto {
   @IsNotEmpty()
   orderNumber: string;
 
-  @IsOptional()
   @IsEnum(OrderType)
-  orderType?: OrderType;
+  orderType: OrderType;
 
   @IsOptional()
   @IsString()

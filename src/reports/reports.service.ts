@@ -1,269 +1,222 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
-import { Transaction } from '../transactions/entities/transaction.entity';
-import { Store } from '../stores/entities/store.entity';
-import { ReportFilterDto } from './dto/report-filter.dto';
+import { Payment, PaymentStatus } from '../payments/entities/payment.entity';
+import { OrderType } from '../orders/entities/order.entity';
+import { ReportFilterDto, ReportPreset } from './dto/report-filter.dto';
 
-interface ReportItem {
-  productId?: string;
-  name?: string;
-  price?: number;
-  quantity: number;
-  total: number;
+interface TopProduct {
+  productId: string;
+  name: string;
+  quantitySold: number;
+  revenue: number;
+}
+
+interface PaymentBreakdown {
+  method: string;
+  amount: number;
+}
+
+interface DeliveryProviderBreakdown {
+  provider: string;
+  amount: number;
+  orders: number;
+}
+
+interface HourlyOrderPoint {
+  hour: number;
+  orders: number;
+}
+
+interface CalendarDay {
+  date: string;
+  revenue: number;
+  orders: number;
+  hourlyOrders: HourlyOrderPoint[];
+  topProducts: TopProduct[];
+  paymentBreakdown: PaymentBreakdown[];
+  deliveryProviderBreakdown: DeliveryProviderBreakdown[];
+}
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+const toDayKey = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+const toHour = (d: Date) => d.getHours();
+
+const sumAmount = (payments: Payment[]) =>
+  payments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+function aggregateTopProducts(payments: Payment[]): TopProduct[] {
+  const map = new Map<string, TopProduct>();
+  for (const payment of payments) {
+    for (const item of payment.order?.items ?? []) {
+      const key = item.product?.id ?? item.name ?? 'unknown';
+      const name = item.name ?? item.product?.name ?? `Product #${key}`;
+      const price = Number(item.price ?? 0);
+      const quantity = item.quantity ?? 1;
+      const current = map.get(key) ?? {
+        productId: key,
+        name,
+        quantitySold: 0,
+        revenue: 0,
+      };
+      current.quantitySold += quantity;
+      current.revenue += price * quantity;
+      map.set(key, current);
+    }
+  }
+  return [...map.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+}
+
+function aggregatePaymentBreakdown(payments: Payment[]): PaymentBreakdown[] {
+  const map = new Map<string, PaymentBreakdown>();
+  for (const payment of payments) {
+    const method = payment.method;
+    const current = map.get(method) ?? { method, amount: 0 };
+    current.amount += Number(payment.amount);
+    map.set(method, current);
+  }
+  return [...map.values()];
+}
+
+function aggregateDeliveryProviders(
+  payments: Payment[],
+): DeliveryProviderBreakdown[] {
+  const map = new Map<string, DeliveryProviderBreakdown>();
+  for (const payment of payments) {
+    if (payment.order?.orderType !== OrderType.DELIVERY) continue;
+    const provider = payment.order.deliveryPlatform ?? 'Unknown';
+    const current = map.get(provider) ?? { provider, amount: 0, orders: 0 };
+    current.amount += Number(payment.amount);
+    current.orders += 1;
+    map.set(provider, current);
+  }
+  return [...map.values()];
+}
+
+function aggregateHourlyOrders(payments: Payment[]): HourlyOrderPoint[] {
+  const map = new Map<number, number>();
+  for (const payment of payments) {
+    const hour = toHour(payment.createdAt);
+    map.set(hour, (map.get(hour) ?? 0) + 1);
+  }
+  return [...map.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([hour, orders]) => ({ hour, orders }));
 }
 
 @Injectable()
 export class ReportsService {
   constructor(
-    @InjectRepository(Transaction)
-    private readonly transactionRepository: Repository<Transaction>,
-    @InjectRepository(Store)
-    private readonly storeRepository: Repository<Store>,
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
   ) {}
 
-  private async assertStoreOwnership(storeId: string, userId?: string) {
-    if (!userId) return;
-    const store = await this.storeRepository.findOne({
-      where: { id: storeId },
-    });
-    if (!store) {
-      throw new BadRequestException(`Store #${storeId} not found`);
-    }
-    if (store.owner_id !== userId) {
-      throw new BadRequestException(
-        `User #${userId} is not the owner of store #${storeId}`,
-      );
-    }
-  }
+  async getReportData(filter: ReportFilterDto) {
+    const { start, end } = this.resolveRange(filter.preset, filter.month);
 
-  async generate(filter: ReportFilterDto, userId?: string) {
-    const { storeId } = filter;
-    if (!storeId?.trim()) {
-      throw new BadRequestException('storeId is required');
-    }
-
-    await this.assertStoreOwnership(storeId.trim(), userId);
-
-    const { start, end } = this.resolveRange(filter);
-
-    const transactions = await this.transactionRepository.find({
+    const payments = await this.paymentRepository.find({
       where: {
-        storeId: storeId.trim(),
+        store: { id: filter.storeId },
+        status: PaymentStatus.PAID,
         createdAt: Between(start, end),
       },
+      relations: ['order', 'order.items', 'order.items.product'],
     });
 
-    const summary = this.buildSummary(transactions);
-    const topProducts = this.buildTopProducts(transactions);
-    const paymentBreakdown = this.buildPaymentBreakdown(transactions);
-    const deliveryProviderBreakdown =
-      this.buildDeliveryProviderBreakdown(transactions);
+    const totalRevenue = sumAmount(payments);
+    const paidOrderIds = new Set(
+      payments.map((p) => p.order?.id).filter(Boolean),
+    );
+    const totalOrders = paidOrderIds.size;
+    const averageOrderValue = totalOrders ? totalRevenue / totalOrders : 0;
+    const deliveryRevenue = payments
+      .filter((p) => p.order?.orderType === OrderType.DELIVERY)
+      .reduce((sum, p) => sum + Number(p.amount), 0);
 
-    if (filter.preset === 'month') {
-      const calendarDays = this.buildCalendarDays(transactions, start, end);
-      return {
-        summary,
-        topProducts,
-        paymentBreakdown,
-        deliveryProviderBreakdown,
-        calendarDays,
-      };
+    const data: Record<string, unknown> = {
+      summary: {
+        totalRevenue,
+        totalOrders,
+        averageOrderValue,
+        deliveryRevenue,
+      },
+      topProducts: aggregateTopProducts(payments),
+      paymentBreakdown: aggregatePaymentBreakdown(payments),
+    };
+
+    if (filter.preset === ReportPreset.MONTH) {
+      data.calendarDays = this.buildCalendarDays(payments, start, end);
     }
 
-    return {
-      summary,
-      topProducts,
-      paymentBreakdown,
-      deliveryProviderBreakdown,
-    };
+    return data;
   }
 
-  private resolveRange(filter: ReportFilterDto): {
-    start: Date;
-    end: Date;
-  } {
+  private resolveRange(preset: ReportPreset, month?: string) {
     const now = new Date();
 
-    if (filter.preset === 'today') {
-      const start = new Date(now);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(now);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
+    if (preset === ReportPreset.TODAY) {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return { start, end: now };
     }
 
-    if (filter.preset === 'week') {
-      const start = new Date(now);
-      start.setDate(start.getDate() - 6);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(now);
-      end.setHours(23, 59, 59, 999);
-      return { start, end };
+    if (preset === ReportPreset.WEEK) {
+      const start = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - 6,
+      );
+      return { start, end: now };
     }
 
-    // month
-    const [year, month] = (filter.month ?? this.currentMonth())
-      .split('-')
-      .map(Number);
-    const start = new Date(year, month - 1, 1, 0, 0, 0, 0);
-    const end = new Date(year, month, 0, 23, 59, 59, 999);
+    const [year, mon] = (month ?? '').split('-').map(Number) as
+      | [number, number]
+      | [];
+    const y = year ?? now.getFullYear();
+    const m = mon ?? now.getMonth() + 1;
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 0, 23, 59, 59, 999);
     return { start, end };
   }
 
-  private currentMonth(): string {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  }
-
-  private buildSummary(transactions: Transaction[]) {
-    const totalRevenue = transactions.reduce(
-      (sum, t) => sum + Number(t.amount || 0),
-      0,
-    );
-    const deliveryRevenue = transactions
-      .filter((t) => t.orderType === 'DELIVERY')
-      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
-    const totalOrders = transactions.length;
-
-    return {
-      totalRevenue: this.round2(totalRevenue),
-      totalOrders,
-      averageOrderValue: totalOrders
-        ? this.round2(totalRevenue / totalOrders)
-        : 0,
-      deliveryRevenue: this.round2(deliveryRevenue),
-    };
-  }
-
-  private buildTopProducts(transactions: Transaction[]) {
-    const map = new Map<
-      string,
-      { productId: string; name: string; quantitySold: number; revenue: number }
-    >();
-
-    for (const t of transactions) {
-      for (const item of (t.items ?? []) as ReportItem[]) {
-        const id = item.productId ?? `unknown-${item.name}`;
-        const current = map.get(id) ?? {
-          productId: id,
-          name: item.name ?? 'Unknown',
-          quantitySold: 0,
-          revenue: 0,
-        };
-        current.quantitySold += item.quantity ?? 0;
-        current.revenue += Number(item.total ?? 0);
-        map.set(id, current);
-      }
-    }
-
-    return [...map.values()]
-      .map((p) => ({ ...p, revenue: this.round2(p.revenue) }))
-      .sort((a, b) => b.quantitySold - a.quantitySold)
-      .slice(0, 10);
-  }
-
-  private buildPaymentBreakdown(transactions: Transaction[]) {
-    const map = new Map<string, number>();
-    for (const t of transactions) {
-      const method =
-        t.method === 'DELIVERY_PLATFORM'
-          ? (t.deliveryPlatform ?? 'DELIVERY_PLATFORM')
-          : t.method;
-      map.set(method, (map.get(method) ?? 0) + Number(t.amount || 0));
-    }
-    return [...map.entries()].map(([method, amount]) => ({
-      method,
-      amount: this.round2(amount),
-    }));
-  }
-
-  private buildDeliveryProviderBreakdown(transactions: Transaction[]) {
-    const map = new Map<
-      string,
-      { provider: string; amount: number; orders: number }
-    >();
-
-    for (const t of transactions) {
-      if (t.orderType !== 'DELIVERY' || !t.deliveryPlatform) continue;
-      const current = map.get(t.deliveryPlatform) ?? {
-        provider: t.deliveryPlatform,
-        amount: 0,
-        orders: 0,
-      };
-      current.amount += Number(t.amount || 0);
-      current.orders += 1;
-      map.set(t.deliveryPlatform, current);
-    }
-
-    return [...map.values()].map((p) => ({
-      ...p,
-      amount: this.round2(p.amount),
-    }));
-  }
-
   private buildCalendarDays(
-    transactions: Transaction[],
+    payments: Payment[],
     start: Date,
     end: Date,
-  ) {
-    const days: {
-      date: string;
-      revenue: number;
-      orders: number;
-      hourlyOrders: { hour: number; orders: number }[];
-      topProducts: {
-        productId: string;
-        name: string;
-        quantitySold: number;
-        revenue: number;
-      }[];
-      paymentBreakdown: { method: string; amount: number }[];
-      deliveryProviderBreakdown: {
-        provider: string;
-        amount: number;
-        orders: number;
-      }[];
-    }[] = [];
+  ): CalendarDay[] {
+    const byDay = new Map<string, Payment[]>();
+    for (const payment of payments) {
+      const key = toDayKey(payment.createdAt);
+      const list = byDay.get(key) ?? [];
+      list.push(payment);
+      byDay.set(key, list);
+    }
 
-    const cursor = new Date(start);
-    while (cursor <= end) {
-      const dateKey = this.toDateKey(cursor);
-      const dayTx = transactions.filter(
-        (t) => this.toDateKey(new Date(t.createdAt)) === dateKey,
-      );
+    const days: CalendarDay[] = [];
+    const cursor = new Date(
+      start.getFullYear(),
+      start.getMonth(),
+      start.getDate(),
+    );
+    const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
 
-      const summary = this.buildSummary(dayTx);
-      const hourly = Array.from({ length: 24 }, (_, hour) => ({
-        hour,
-        orders: dayTx.filter((t) => new Date(t.createdAt).getHours() === hour)
-          .length,
-      }));
-
+    while (cursor <= last) {
+      const key = toDayKey(cursor);
+      const dayPayments = byDay.get(key) ?? [];
       days.push({
-        date: dateKey,
-        revenue: summary.totalRevenue,
-        orders: summary.totalOrders,
-        hourlyOrders: hourly,
-        topProducts: this.buildTopProducts(dayTx),
-        paymentBreakdown: this.buildPaymentBreakdown(dayTx),
-        deliveryProviderBreakdown: this.buildDeliveryProviderBreakdown(dayTx),
+        date: key,
+        revenue: sumAmount(dayPayments),
+        orders: new Set(dayPayments.map((p) => p.order?.id)).size,
+        hourlyOrders: aggregateHourlyOrders(dayPayments),
+        topProducts: aggregateTopProducts(dayPayments),
+        paymentBreakdown: aggregatePaymentBreakdown(dayPayments),
+        deliveryProviderBreakdown: aggregateDeliveryProviders(dayPayments),
       });
-
       cursor.setDate(cursor.getDate() + 1);
     }
 
     return days;
-  }
-
-  private toDateKey(date: Date): string {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      '0',
-    )}-${String(date.getDate()).padStart(2, '0')}`;
-  }
-
-  private round2(value: number): number {
-    return Math.round(value * 100) / 100;
   }
 }
