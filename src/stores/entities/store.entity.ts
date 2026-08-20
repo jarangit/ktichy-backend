@@ -24,6 +24,12 @@ export class Store {
   @Column()
   name: string;
 
+  @Column({ name: 'order_limit', type: 'int', default: 20 })
+  orderLimit: number;
+
+  @Column({ type: 'json', nullable: true })
+  settings: Record<string, unknown> | null;
+
   @ManyToOne(() => User, (user) => user.stores, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'owner_id' })
   owner: User;
