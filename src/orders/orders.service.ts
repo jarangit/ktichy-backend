@@ -12,6 +12,7 @@ import { Product } from '../products/entities/product.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 import { Store } from '../stores/entities/store.entity';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class OrdersService {
@@ -27,6 +28,8 @@ export class OrdersService {
 
     @InjectRepository(OrderStationItem)
     private readonly orderStationItemRepository: Repository<OrderStationItem>,
+
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   private async buildOrderItems(
@@ -108,7 +111,24 @@ export class OrdersService {
 
     order.items = await this.buildOrderItems(products);
 
-    return await this.orderRepository.save(order);
+    const savedOrder = await this.orderRepository.save(order);
+    const stationIds = Array.from(
+      new Set(
+        savedOrder.items.flatMap((item) =>
+          (item.stationItems ?? [])
+            .map((stationItem) => stationItem.station?.id)
+            .filter((stationId): stationId is string => Boolean(stationId)),
+        ),
+      ),
+    );
+
+    this.realtimeGateway.emitOrderCreated({
+      orderId: savedOrder.id,
+      storeId: normalizedStoreId,
+      stationIds,
+    });
+
+    return savedOrder;
   }
 
   async findAll(): Promise<Order[]> {

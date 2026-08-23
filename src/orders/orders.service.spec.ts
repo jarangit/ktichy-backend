@@ -5,6 +5,7 @@ import { Order } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 describe('OrdersService', () => {
   let service: OrdersService;
@@ -27,6 +28,10 @@ describe('OrdersService', () => {
         },
         {
           provide: getRepositoryToken(OrderStationItem),
+          useValue: {},
+        },
+        {
+          provide: RealtimeGateway,
           useValue: {},
         },
       ],
