@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { And, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { Order } from '../orders/entities/order.entity';
 import { OrdersService } from '../orders/orders.service';
-import { toBangkokISOString } from '../utils/date';
 
 export interface TransactionView {
   id: string;
@@ -26,8 +25,8 @@ export interface TransactionView {
   totalItemCount: number;
   items: unknown[];
   products: unknown[];
-  createdAt: string | null;
-  updatedAt: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface TransactionListFilter {
@@ -173,8 +172,8 @@ const toTransactionView = (order: Order): TransactionView => {
     totalItemCount,
     items,
     products: items,
-    createdAt: toBangkokISOString(order.createdAt),
-    updatedAt: toBangkokISOString(order.updatedAt),
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
   };
 };
 

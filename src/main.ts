@@ -5,7 +5,6 @@ import { AppModule } from './app.module';
 import { DatabaseExceptionFilter } from './common/filters/db-exception.filter';
 import './intrument';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
-import { BangkokDateInterceptor } from './common/interceptor/bangkok-date.interceptor';
 import { LoggingInterceptor } from './midleware/logging.interceptor';
 
 async function bootstrap() {
@@ -24,7 +23,6 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new DatabaseExceptionFilter());
   app.useGlobalInterceptors(
-    new BangkokDateInterceptor(),
     new ResponseInterceptor(),
     new LoggingInterceptor(),
   );

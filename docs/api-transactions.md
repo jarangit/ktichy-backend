@@ -37,7 +37,7 @@ ALL | IN_PROGRESS | DONE | CANCELLED
   CANCELLED   = CANCELLED
 ```
 
-**Timezone**: BE/DB ล็อกเป็น `Asia/Bangkok` (`docker-compose.yml:8`, `src/app.module.ts:36` `timezone: '+07:00'`) — FE แสดงเวลาไทยได้เลย ไม่ต้องแปลงเพิ่ม แต่ถ้า parse เป็น `Date` ให้ใช้ `Asia/Bangkok`
+**Timezone**: API ส่งค่า `createdAt`/`updatedAt` เป็นมาตรฐาน ISO จาก `Date` object ของ Nest/Node. FE ควร parse แล้ว format เป็น timezone ที่ต้องการแสดงผลเอง เช่น `Asia/Bangkok`.
 
 ---
 
@@ -460,7 +460,7 @@ curl -X PATCH http://localhost:3000/api/v1/transactions/abc1234567 \
 - [ ] `GET /transactions/counts` ต้องส่ง filter ชุดเดียวกับ `GET /transactions` เสมอ
 - [ ] `PATCH` ส่งได้แค่ `status`/`tableNumber`/`products` — field อื่นจะถูก strip
 - [ ] `products: []` จะ error — ถ้าไม่แก้สินค้าให้ omit field
-- [ ] เวลา `createdAt`/`updatedAt` เป็น `Asia/Bangkok` แล้ว — แสดงได้เลย
+- [ ] FE ต้อง parse `createdAt`/`updatedAt` แล้ว format เป็น timezone ที่ต้องการ เช่น `Asia/Bangkok`
 
 ---
 
