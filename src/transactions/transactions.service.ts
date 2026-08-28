@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { And, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { Order } from '../orders/entities/order.entity';
 import { OrdersService } from '../orders/orders.service';
+import { toBangkokISOString } from '../utils/date';
 
 export interface TransactionView {
   id: string;
@@ -25,8 +26,8 @@ export interface TransactionView {
   totalItemCount: number;
   items: unknown[];
   products: unknown[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface TransactionListFilter {
@@ -35,6 +36,8 @@ export interface TransactionListFilter {
   method?: string;
   startDate?: string;
   endDate?: string;
+  search?: string;
+  orderType?: string;
 }
 
 export interface TransactionCountsView {
@@ -50,6 +53,74 @@ const toFlowStatus = (status: string): 'IN_PROGRESS' | 'DONE' | 'CANCELLED' => {
   if (status === 'CANCELLED') return 'CANCELLED';
   if (DONE_STATUSES.includes(status)) return 'DONE';
   return 'IN_PROGRESS';
+};
+
+const buildDateWhere = (filter: TransactionListFilter): unknown | undefined => {
+  if (filter.startDate) {
+    const start = MoreThanOrEqual(new Date(filter.startDate));
+    const end = filter.endDate
+      ? LessThanOrEqual(new Date(filter.endDate))
+      : undefined;
+    return end ? And(start, end) : start;
+  }
+  if (filter.endDate) {
+    return LessThanOrEqual(new Date(filter.endDate));
+  }
+  return undefined;
+};
+
+const applyTransactionFilters = (
+  views: TransactionView[],
+  filter: TransactionListFilter,
+): TransactionView[] => {
+  let result = views;
+
+  if (filter.search) {
+    const term = filter.search.trim().toLowerCase();
+    if (term) {
+      result = result.filter((v) =>
+        (v.orderNumber ?? '').toLowerCase().includes(term),
+      );
+    }
+  }
+
+  if (filter.orderType) {
+    const orderType = filter.orderType.toUpperCase();
+    result = result.filter(
+      (v) => (v.orderType ?? v.type)?.toUpperCase() === orderType,
+    );
+  }
+
+  if (filter.method) {
+    const method = filter.method.toUpperCase();
+    result = result.filter((v) => v.method === method);
+  }
+
+  if (filter.status) {
+    const status = filter.status.toUpperCase();
+    result = result.filter((v) => v.status === status);
+  }
+
+  if (filter.flowStatus) {
+    switch (filter.flowStatus) {
+      case 'DONE':
+        result = result.filter((v) => DONE_STATUSES.includes(v.status));
+        break;
+      case 'CANCELLED':
+        result = result.filter((v) => v.status === 'CANCELLED');
+        break;
+      case 'IN_PROGRESS':
+        result = result.filter(
+          (v) => !DONE_STATUSES.includes(v.status) && v.status !== 'CANCELLED',
+        );
+        break;
+      case 'ALL':
+      default:
+        break;
+    }
+  }
+
+  return result;
 };
 
 const toTransactionView = (order: Order): TransactionView => {
@@ -78,7 +149,7 @@ const toTransactionView = (order: Order): TransactionView => {
       (item.stationItems ?? []).length > 0 &&
       item.stationItems.every((stationItem) => stationItem.status === 'served');
 
-    return sum + (isServed ? item.quantity ?? 0 : 0);
+    return sum + (isServed ? (item.quantity ?? 0) : 0);
   }, 0);
 
   return {
@@ -102,8 +173,8 @@ const toTransactionView = (order: Order): TransactionView => {
     totalItemCount,
     items,
     products: items,
-    createdAt: order.createdAt,
-    updatedAt: order.updatedAt,
+    createdAt: toBangkokISOString(order.createdAt),
+    updatedAt: toBangkokISOString(order.updatedAt),
   };
 };
 
@@ -120,67 +191,51 @@ export class TransactionsService {
     filter: TransactionListFilter = {},
   ): Promise<TransactionView[]> {
     const where: Record<string, unknown> = { store: { id: storeId } };
-
-    if (filter.startDate) {
-      const start = MoreThanOrEqual(new Date(filter.startDate));
-      const end = filter.endDate
-        ? LessThanOrEqual(new Date(filter.endDate))
-        : undefined;
-      where.createdAt = end ? And(start, end) : start;
-    } else if (filter.endDate) {
-      where.createdAt = LessThanOrEqual(new Date(filter.endDate));
-    }
+    const dateWhere = buildDateWhere(filter);
+    if (dateWhere) where.createdAt = dateWhere;
 
     const orders = await this.orderRepository.find({
       where,
-      relations: ['store', 'items', 'items.product', 'items.stationItems', 'payments'],
+      relations: [
+        'store',
+        'items',
+        'items.product',
+        'items.stationItems',
+        'payments',
+      ],
       order: { createdAt: 'DESC' },
     });
 
-    let views = orders.map(toTransactionView);
-
-    if (filter.method) {
-      const method = filter.method.toUpperCase();
-      views = views.filter((v) => v.method === method);
-    }
-
-    if (filter.status) {
-      const status = filter.status.toUpperCase();
-      views = views.filter((v) => v.status === status);
-    }
-
-    if (filter.flowStatus) {
-      switch (filter.flowStatus) {
-        case 'DONE':
-          views = views.filter((v) => DONE_STATUSES.includes(v.status));
-          break;
-        case 'CANCELLED':
-          views = views.filter((v) => v.status === 'CANCELLED');
-          break;
-        case 'IN_PROGRESS':
-          views = views.filter(
-            (v) => !DONE_STATUSES.includes(v.status) && v.status !== 'CANCELLED',
-          );
-          break;
-        case 'ALL':
-        default:
-          break;
-      }
-    }
-
-    return views;
+    const views = orders.map(toTransactionView);
+    return applyTransactionFilters(views, filter);
   }
 
-  async getCountsByStoreId(storeId: string): Promise<TransactionCountsView> {
+  async getCountsByStoreId(
+    storeId: string,
+    filter: TransactionListFilter = {},
+  ): Promise<TransactionCountsView> {
+    const where: Record<string, unknown> = { store: { id: storeId } };
+    const dateWhere = buildDateWhere(filter);
+    if (dateWhere) where.createdAt = dateWhere;
+
     const orders = await this.orderRepository.find({
-      where: { store: { id: storeId } },
-      select: ['id', 'status'],
-      relations: ['store'],
+      where,
+      relations: [
+        'store',
+        'items',
+        'items.product',
+        'items.stationItems',
+        'payments',
+      ],
+      order: { createdAt: 'DESC' },
     });
 
-    return orders.reduce<TransactionCountsView>(
-      (counts, order) => {
-        const flowStatus = toFlowStatus(order.status);
+    const views = orders.map(toTransactionView);
+    const filtered = applyTransactionFilters(views, filter);
+
+    return filtered.reduce<TransactionCountsView>(
+      (counts, view) => {
+        const flowStatus = toFlowStatus(view.status);
         counts.all += 1;
         if (flowStatus === 'IN_PROGRESS') counts.inProgress += 1;
         else if (flowStatus === 'DONE') counts.done += 1;
@@ -194,7 +249,13 @@ export class TransactionsService {
   async findOne(id: string): Promise<TransactionView> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['store', 'items', 'items.product', 'items.stationItems', 'payments'],
+      relations: [
+        'store',
+        'items',
+        'items.product',
+        'items.stationItems',
+        'payments',
+      ],
     });
 
     if (!order) {
@@ -204,8 +265,14 @@ export class TransactionsService {
     return toTransactionView(order);
   }
 
-  async update(id: string, updateDto: Record<string, unknown>) {
-    const order = await this.ordersService.update(id, updateDto);
+  async update(
+    id: string,
+    updateDto: import('./dto/update-transaction.dto').UpdateTransactionDto,
+  ) {
+    const order = await this.ordersService.update(
+      id,
+      updateDto as unknown as import('../orders/dto/update-order.dto').UpdateOrderDto,
+    );
     return toTransactionView(order);
   }
 }

@@ -33,6 +33,7 @@ const infrastructureModules = [
     database: process.env.DB_NAME,
     autoLoadEntities: true,
     synchronize: false,
+    timezone: '+07:00',
   }),
   ScheduleModule.forRoot(),
   SentryModule.forRoot(),

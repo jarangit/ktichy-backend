@@ -163,7 +163,15 @@ export class OrdersService {
 
     // Replace order items when the payload includes a product list
     // (e.g. editing an order from the transaction detail page).
-    if (products && products.length) {
+    // If products is provided it must contain at least one item; empty array is rejected
+    // to avoid accidentally clearing the order. DTO validation (UpdateTransactionDto)
+    // already enforces ArrayMinSize(1), this guard is defensive for direct OrdersService use.
+    if (products !== undefined) {
+      if (!products.length) {
+        throw new BadRequestException(
+          'products must contain at least one item when provided',
+        );
+      }
       if (order.items?.length) {
         await this.orderItemRepository.delete(order.items.map((i) => i.id));
       }

@@ -62,7 +62,9 @@ describe('OrderStationItemService', () => {
       orderItem: { order },
     } as any;
 
-    orderStationItemRepository.manager.findOne.mockResolvedValue({ id: 'station-1' });
+    orderStationItemRepository.manager.findOne.mockResolvedValue({
+      id: 'station-1',
+    });
     orderStationItemRepository.findOne.mockResolvedValue(stationItem);
     orderStationItemRepository.save.mockImplementation(async (value) => value);
     orderStationItemRepository.find.mockResolvedValue([
@@ -105,7 +107,9 @@ describe('OrderStationItemService', () => {
       orderItem: { order },
     } as any;
 
-    orderStationItemRepository.manager.findOne.mockResolvedValue({ id: 'station-1' });
+    orderStationItemRepository.manager.findOne.mockResolvedValue({
+      id: 'station-1',
+    });
     orderStationItemRepository.findOne.mockResolvedValue(stationItem);
     orderStationItemRepository.save.mockImplementation(async (value) => value);
     orderStationItemRepository.find.mockResolvedValue([
