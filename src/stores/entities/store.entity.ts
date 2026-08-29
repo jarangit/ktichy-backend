@@ -15,6 +15,7 @@ import { Order } from '../../orders/entities/order.entity';
 import { nanoid10 } from '../../utils/nanoid';
 import { Category } from '../../category/entities/category.entity';
 import { Product } from '../../products/entities/product.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'store' })
 export class Store {
@@ -29,6 +30,10 @@ export class Store {
 
   @Column({ type: 'json', nullable: true })
   settings: Record<string, unknown> | null;
+
+  @Column({ name: 'pin_hash', type: 'varchar', length: 255, nullable: true, select: false })
+  @Exclude()
+  pinHash: string | null;
 
   @ManyToOne(() => User, (user) => user.stores, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'owner_id' })

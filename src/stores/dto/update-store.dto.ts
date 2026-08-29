@@ -5,6 +5,8 @@ import {
   IsInt,
   IsObject,
   IsOptional,
+  IsString,
+  Matches,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -21,4 +23,10 @@ export class UpdateStoreDto extends PartialType(CreateStoreDto) {
   @ValidateNested()
   @Type(() => StoreSettingsDto)
   settings?: StoreSettingsDto;
+
+  // PIN for write authorization — not persisted, verified per-request
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4,6}$/, { message: 'pin must be 4-6 digits' })
+  pin?: string;
 }
