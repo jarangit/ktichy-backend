@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { io, Socket } from 'socket.io-client';
+import { Payment } from '../src/payments/entities/payment.entity';
 import { RealtimeGateway } from '../src/realtime/realtime.gateway';
 import { Station } from '../src/stations/entities/station.entity';
 import { Store } from '../src/stores/entities/store.entity';
@@ -21,6 +22,10 @@ describe('RealtimeGateway (network e2e)', () => {
   };
 
   const stationRepositoryMock = {
+    findOne: jest.fn(),
+  };
+
+  const paymentRepositoryMock = {
     findOne: jest.fn(),
   };
 
@@ -72,6 +77,10 @@ describe('RealtimeGateway (network e2e)', () => {
         {
           provide: getRepositoryToken(Station),
           useValue: stationRepositoryMock,
+        },
+        {
+          provide: getRepositoryToken(Payment),
+          useValue: paymentRepositoryMock,
         },
       ],
     }).compile();

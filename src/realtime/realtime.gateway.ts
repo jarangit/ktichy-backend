@@ -3,6 +3,8 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   ConnectedSocket,
   MessageBody,
@@ -12,11 +14,10 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Server, Socket } from 'socket.io';
+import { Repository } from 'typeorm';
 import { AppJwtPayload } from '../auth/type';
+import { Payment } from '../payments/entities/payment.entity';
 import { Station } from '../stations/entities/station.entity';
 import { Store } from '../stores/entities/store.entity';
 
@@ -25,11 +26,15 @@ type JoinRoomPayload = {
   stationId?: string;
 };
 
+type ReceiptRoomPayload = {
+  receiptToken?: string;
+};
+
 type RealtimeClientData = {
   auth?: AppJwtPayload;
 };
 
-type RealtimeSocket = Socket<unknown, unknown, unknown, RealtimeClientData>;
+type RealtimeSocket = Socket<any, any, any, RealtimeClientData>;
 
 type OrderCreatedEvent = {
   orderId: string;
@@ -50,6 +55,7 @@ type OrderStationItemUpdatedEvent = {
 
 const storeRoom = (storeId: string) => `store:${storeId}`;
 const stationRoom = (stationId: string) => `station:${stationId}`;
+const receiptRoom = (receiptToken: string) => `receipt:${receiptToken}`;
 
 @WebSocketGateway({
   cors: {
@@ -68,18 +74,22 @@ export class RealtimeGateway
     private readonly storeRepository: Repository<Store>,
     @InjectRepository(Station)
     private readonly stationRepository: Repository<Station>,
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
   ) {}
 
   @WebSocketServer()
   server: Server;
 
   async handleConnection(client: RealtimeSocket) {
-    try {
-      const token = this.extractToken(client);
-      if (!token) {
-        throw new UnauthorizedException('Missing realtime token');
-      }
+    const token = this.extractToken(client);
 
+    if (!token) {
+      this.debug('public socket connected', { socketId: client.id });
+      return;
+    }
+
+    try {
       client.data.auth = await this.jwtService.verifyAsync<AppJwtPayload>(
         token,
         {
@@ -161,6 +171,48 @@ export class RealtimeGateway
     });
   }
 
+  @SubscribeMessage('receipt.join')
+  async joinReceipt(
+    @ConnectedSocket() client: RealtimeSocket,
+    @MessageBody() payload: ReceiptRoomPayload,
+  ) {
+    if (!payload.receiptToken) return;
+
+    const payment = await this.paymentRepository.findOne({
+      where: { receiptToken: payload.receiptToken },
+    });
+
+    if (!payment) return;
+
+    if (payment.receiptExpiresAt.getTime() <= Date.now()) {
+      client.emit('receipt.expired', {
+        receiptToken: payload.receiptToken,
+        expiredAt: payment.receiptExpiresAt,
+      });
+      return;
+    }
+
+    await client.join(receiptRoom(payload.receiptToken));
+    this.debug('receipt room joined', {
+      socketId: client.id,
+      receiptToken: payload.receiptToken,
+    });
+  }
+
+  @SubscribeMessage('receipt.leave')
+  async leaveReceipt(
+    @ConnectedSocket() client: RealtimeSocket,
+    @MessageBody() payload: ReceiptRoomPayload,
+  ) {
+    if (!payload.receiptToken) return;
+
+    await client.leave(receiptRoom(payload.receiptToken));
+    this.debug('receipt room left', {
+      socketId: client.id,
+      receiptToken: payload.receiptToken,
+    });
+  }
+
   emitOrderCreated(event: OrderCreatedEvent) {
     this.debug('emit order.created', event);
     this.server.to(storeRoom(event.storeId)).emit('order.created', event);
@@ -170,9 +222,10 @@ export class RealtimeGateway
     }
   }
 
-  emitOrderUpdated(event: OrderUpdatedEvent) {
+  async emitOrderUpdated(event: OrderUpdatedEvent) {
     this.debug('emit order.updated', event);
     this.server.to(storeRoom(event.storeId)).emit('order.updated', event);
+    await this.emitReceiptUpdated(event.orderId);
   }
 
   emitOrderStationItemUpdated(event: OrderStationItemUpdatedEvent) {
@@ -180,6 +233,33 @@ export class RealtimeGateway
     this.server
       .to(stationRoom(event.stationId))
       .emit('order.station-item.updated', event);
+  }
+
+  private async emitReceiptUpdated(orderId: string) {
+    const payment = await this.paymentRepository.findOne({
+      where: { order: { id: orderId } },
+      relations: ['order'],
+    });
+
+    if (!payment) return;
+
+    if (payment.receiptExpiresAt.getTime() <= Date.now()) {
+      this.server
+        .to(receiptRoom(payment.receiptToken))
+        .emit('receipt.expired', {
+          receiptToken: payment.receiptToken,
+          expiredAt: payment.receiptExpiresAt,
+        });
+      return;
+    }
+
+    this.server.to(receiptRoom(payment.receiptToken)).emit('receipt.updated', {
+      receiptToken: payment.receiptToken,
+      orderId: payment.order.id,
+      orderNumber: payment.order.orderNumber,
+      status: payment.order.status,
+      updatedAt: payment.order.updatedAt,
+    });
   }
 
   private debug(message: string, meta: Record<string, unknown>) {

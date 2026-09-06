@@ -151,7 +151,7 @@ export class OrdersService {
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['items'],
+      relations: ['store', 'items'],
     });
 
     if (!order) {
@@ -178,7 +178,12 @@ export class OrdersService {
       order.items = await this.buildOrderItems(products);
     }
 
-    return this.orderRepository.save(order);
+    const saved = await this.orderRepository.save(order);
+    await this.realtimeGateway.emitOrderUpdated({
+      orderId: saved.id,
+      storeId: saved.store.id,
+    });
+    return saved;
   }
 
   async remove({

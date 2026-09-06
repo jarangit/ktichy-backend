@@ -32,7 +32,10 @@ describe('OrdersService', () => {
         },
         {
           provide: RealtimeGateway,
-          useValue: {},
+          useValue: {
+            emitOrderCreated: jest.fn(),
+            emitOrderUpdated: jest.fn(),
+          },
         },
       ],
     }).compile();

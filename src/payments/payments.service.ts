@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import {
@@ -22,10 +23,29 @@ export class PaymentsService {
     private readonly orderRepository: Repository<Order>,
   ) {}
 
+  private createReceiptToken(): string {
+    return `rcpt_${randomBytes(24).toString('base64url')}`;
+  }
+
+  private createReceiptExpiresAt(): Date {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    return expiresAt;
+  }
+
+  private createReceiptUrl(receiptToken: string): string {
+    const clientUrl = process.env.CLIENT_URL ?? 'http://localhost:5173';
+    return `${clientUrl.replace(/\/$/, '')}/receipt/${receiptToken}`;
+  }
+
   async pay(
     orderId: string,
     createPaymentDto: CreatePaymentDto,
-  ): Promise<{ order: Order; payment: Payment }> {
+  ): Promise<{
+    order: Order;
+    payment: Payment;
+    receipt: { token: string; url: string; expiresAt: Date };
+  }> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
       relations: ['store', 'items'],
@@ -58,10 +78,20 @@ export class PaymentsService {
       receivedAmount: isCash ? (createPaymentDto.receivedAmount ?? null) : null,
       change: isCash ? change : 0,
       receiptId: order.orderNumber,
+      receiptToken: this.createReceiptToken(),
+      receiptExpiresAt: this.createReceiptExpiresAt(),
     });
 
     const saved = await this.paymentRepository.save(payment);
 
-    return { order, payment: saved };
+    return {
+      order,
+      payment: saved,
+      receipt: {
+        token: saved.receiptToken,
+        url: this.createReceiptUrl(saved.receiptToken),
+        expiresAt: saved.receiptExpiresAt,
+      },
+    };
   }
 }

@@ -21,6 +21,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { PaymentsModule } from './payments/payments.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ReportsModule } from './reports/reports.module';
+import { PublicReceiptsModule } from './public-receipts/public-receipts.module';
 import { RealtimeModule } from './realtime/realtime.module';
 
 const infrastructureModules = [
@@ -56,6 +57,7 @@ const featureModules = [
   PaymentsModule,
   TransactionsModule,
   ReportsModule,
+  PublicReceiptsModule,
 ];
 
 @Module({

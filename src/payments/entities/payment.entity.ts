@@ -51,6 +51,12 @@ export class Payment {
   @Column({ type: 'varchar', length: 100 })
   receiptId: string;
 
+  @Column({ type: 'varchar', length: 80, unique: true })
+  receiptToken: string;
+
+  @Column({ type: 'datetime' })
+  receiptExpiresAt: Date;
+
   @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.PAID })
   status: PaymentStatus;
 

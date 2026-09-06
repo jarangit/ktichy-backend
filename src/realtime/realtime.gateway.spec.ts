@@ -9,6 +9,9 @@ describe('RealtimeGateway', () => {
   const stationRepository = {
     findOne: jest.fn(),
   };
+  const paymentRepository = {
+    findOne: jest.fn(),
+  };
 
   const createSocket = (options?: { token?: string; auth?: AppJwtPayload }) => {
     return {
@@ -32,6 +35,7 @@ describe('RealtimeGateway', () => {
       { verifyAsync } as any,
       storeRepository as any,
       stationRepository as any,
+      paymentRepository as any,
     );
     (gateway as any).server = {
       to: jest.fn().mockReturnValue({ emit: jest.fn() }),
