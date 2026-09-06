@@ -28,6 +28,7 @@ export class OrdersService {
 
     @InjectRepository(OrderStationItem)
     private readonly orderStationItemRepository: Repository<OrderStationItem>,
+
     private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
@@ -110,7 +111,24 @@ export class OrdersService {
 
     order.items = await this.buildOrderItems(products);
 
-    return await this.orderRepository.save(order);
+    const savedOrder = await this.orderRepository.save(order);
+    const stationIds = Array.from(
+      new Set(
+        savedOrder.items.flatMap((item) =>
+          (item.stationItems ?? [])
+            .map((stationItem) => stationItem.station?.id)
+            .filter((stationId): stationId is string => Boolean(stationId)),
+        ),
+      ),
+    );
+
+    this.realtimeGateway.emitOrderCreated({
+      orderId: savedOrder.id,
+      storeId: normalizedStoreId,
+      stationIds,
+    });
+
+    return savedOrder;
   }
 
   async findAll(): Promise<Order[]> {
@@ -133,7 +151,7 @@ export class OrdersService {
   async update(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['items'],
+      relations: ['store', 'items'],
     });
 
     if (!order) {
@@ -153,7 +171,10 @@ export class OrdersService {
     }
 
     const saved = await this.orderRepository.save(order);
-    await this.realtimeGateway.emitOrderUpdated(saved);
+    await this.realtimeGateway.emitOrderUpdated({
+      orderId: saved.id,
+      storeId: saved.store.id,
+    });
     return saved;
   }
 

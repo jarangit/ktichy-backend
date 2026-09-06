@@ -3,6 +3,7 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export enum OrderStationItemStatusDto {
   PENDING = 'pending',
   COMPLETE = 'complete',
+  SERVED = 'served',
 }
 export class CreateOrderStationItemDto {
   @IsString()

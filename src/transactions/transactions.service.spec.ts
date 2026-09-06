@@ -33,6 +33,7 @@ describe('TransactionsService', () => {
       {
         id: 'i1',
         product: { id: 'p1' },
+        stationItems: [{ status: 'served' }],
         name: 'Coffee',
         price: 50,
         quantity: 2,
@@ -76,6 +77,8 @@ describe('TransactionsService', () => {
       expect(result[0].method).toBe('QR');
       expect(result[0].receiptId).toBe('A-001');
       expect(result[0].totalAmount).toBe(100);
+      expect(result[0].servedItemCount).toBe(2);
+      expect(result[0].totalItemCount).toBe(2);
       expect(result[0].items[0]).toEqual({
         id: 'i1',
         productId: 'p1',
@@ -98,6 +101,25 @@ describe('TransactionsService', () => {
       expect(result[0].totalAmount).toBe(100);
     });
 
+    it('should keep served count at zero when items are not fully served', async () => {
+      orderRepositoryMock.find.mockResolvedValue([
+        {
+          ...baseOrder,
+          items: [
+            {
+              ...baseOrder.items[0],
+              stationItems: [{ status: 'complete' }],
+            },
+          ],
+        },
+      ]);
+
+      const result = await service.findByStoreId('s1');
+
+      expect(result[0].servedItemCount).toBe(0);
+      expect(result[0].totalItemCount).toBe(2);
+    });
+
     it('should return an empty array when the store has no orders', async () => {
       orderRepositoryMock.find.mockResolvedValue([]);
 
@@ -112,6 +134,32 @@ describe('TransactionsService', () => {
       const result = await service.findByStoreId('s1', { method: 'CASH' });
 
       expect(result).toEqual([]);
+    });
+
+    it('should filter done flow status using READY and COMPLETED', async () => {
+      orderRepositoryMock.find.mockResolvedValue([
+        baseOrder,
+        { ...baseOrder, id: 'o2', status: 'COMPLETED' },
+        { ...baseOrder, id: 'o3', status: 'PREPARING' },
+      ]);
+
+      const result = await service.findByStoreId('s1', { flowStatus: 'DONE' });
+
+      expect(result.map((item) => item.id)).toEqual(['o1', 'o2']);
+    });
+
+    it('should filter in progress flow status', async () => {
+      orderRepositoryMock.find.mockResolvedValue([
+        { ...baseOrder, id: 'o1', status: 'PREPARING' },
+        { ...baseOrder, id: 'o2', status: 'READY' },
+        { ...baseOrder, id: 'o3', status: 'CANCELLED' },
+      ]);
+
+      const result = await service.findByStoreId('s1', {
+        flowStatus: 'IN_PROGRESS',
+      });
+
+      expect(result.map((item) => item.id)).toEqual(['o1']);
     });
   });
 
@@ -131,6 +179,26 @@ describe('TransactionsService', () => {
 
       expect(result.orderNumber).toBe('A-001');
       expect(result.totalAmount).toBe(100);
+    });
+  });
+
+  describe('getCountsByStoreId', () => {
+    it('should aggregate counts by flow status', async () => {
+      orderRepositoryMock.find.mockResolvedValue([
+        { id: 'o1', status: 'PREPARING' },
+        { id: 'o2', status: 'READY' },
+        { id: 'o3', status: 'COMPLETED' },
+        { id: 'o4', status: 'CANCELLED' },
+      ]);
+
+      const result = await service.getCountsByStoreId('s1');
+
+      expect(result).toEqual({
+        all: 4,
+        inProgress: 1,
+        done: 2,
+        cancelled: 1,
+      });
     });
   });
 

@@ -50,13 +50,13 @@ export class StoresService {
     }
   }
 
-  async update(id: string, updateStoreDto: UpdateStoreDto) {
+  async update(id: string, updateStoreDto: UpdateStoreDto, userId?: string) {
     const store = await this.storeRepository.findOne({
-      where: { id },
+      where: userId ? { id, owner_id: userId } : { id },
     });
 
     if (!store) {
-      throw new BadRequestException('Store not found');
+      throw new BadRequestException('Store not found or you are not the owner');
     }
 
     Object.assign(store, updateStoreDto);

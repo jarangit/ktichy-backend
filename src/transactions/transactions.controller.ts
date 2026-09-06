@@ -16,6 +16,11 @@ export class TransactionsController {
     return this.transactionsService.findByStoreId(storeId, filter);
   }
 
+  @Get('counts')
+  getCounts(@Query('storeId') storeId: string) {
+    return this.transactionsService.getCountsByStoreId(storeId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.transactionsService.findOne(id);

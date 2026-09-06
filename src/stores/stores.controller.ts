@@ -42,9 +42,14 @@ export class StoresController {
     return this.storesService.findByUserId(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStoreDto: UpdateStoreDto) {
-    return this.storesService.update(id, updateStoreDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateStoreDto: UpdateStoreDto,
+    @Req() req: any,
+  ) {
+    return this.storesService.update(id, updateStoreDto, req.user?.sub);
   }
 
   @Delete(':id')

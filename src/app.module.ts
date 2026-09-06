@@ -37,6 +37,7 @@ const infrastructureModules = [
   }),
   ScheduleModule.forRoot(),
   SentryModule.forRoot(),
+  RealtimeModule,
 ];
 
 const featureModules = [
@@ -54,7 +55,6 @@ const featureModules = [
   TransactionsModule,
   ReportsModule,
   PublicReceiptsModule,
-  RealtimeModule,
 ];
 
 @Module({
