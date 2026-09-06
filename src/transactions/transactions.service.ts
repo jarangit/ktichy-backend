@@ -78,7 +78,7 @@ const toTransactionView = (order: Order): TransactionView => {
       (item.stationItems ?? []).length > 0 &&
       item.stationItems.every((stationItem) => stationItem.status === 'served');
 
-    return sum + (isServed ? item.quantity ?? 0 : 0);
+    return sum + (isServed ? (item.quantity ?? 0) : 0);
   }, 0);
 
   return {
@@ -133,7 +133,13 @@ export class TransactionsService {
 
     const orders = await this.orderRepository.find({
       where,
-      relations: ['store', 'items', 'items.product', 'items.stationItems', 'payments'],
+      relations: [
+        'store',
+        'items',
+        'items.product',
+        'items.stationItems',
+        'payments',
+      ],
       order: { createdAt: 'DESC' },
     });
 
@@ -159,7 +165,8 @@ export class TransactionsService {
           break;
         case 'IN_PROGRESS':
           views = views.filter(
-            (v) => !DONE_STATUSES.includes(v.status) && v.status !== 'CANCELLED',
+            (v) =>
+              !DONE_STATUSES.includes(v.status) && v.status !== 'CANCELLED',
           );
           break;
         case 'ALL':
@@ -194,7 +201,13 @@ export class TransactionsService {
   async findOne(id: string): Promise<TransactionView> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['store', 'items', 'items.product', 'items.stationItems', 'payments'],
+      relations: [
+        'store',
+        'items',
+        'items.product',
+        'items.stationItems',
+        'payments',
+      ],
     });
 
     if (!order) {
