@@ -12,6 +12,7 @@ import { Product } from '../products/entities/product.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 import { Store } from '../stores/entities/store.entity';
+import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
 export class OrdersService {
@@ -27,6 +28,7 @@ export class OrdersService {
 
     @InjectRepository(OrderStationItem)
     private readonly orderStationItemRepository: Repository<OrderStationItem>,
+    private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
   private async buildOrderItems(
@@ -150,7 +152,9 @@ export class OrdersService {
       order.items = await this.buildOrderItems(products);
     }
 
-    return this.orderRepository.save(order);
+    const saved = await this.orderRepository.save(order);
+    await this.realtimeGateway.emitOrderUpdated(saved);
+    return saved;
   }
 
   async remove({
