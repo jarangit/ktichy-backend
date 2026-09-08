@@ -19,6 +19,7 @@ import { QuickNoteModule } from './quick-note/quick-note.module';
 import { UserIdentitiesModule } from './user_identities/user_identities.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ModifiersModule } from './modifiers/modifiers.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ReportsModule } from './reports/reports.module';
 import { PublicReceiptsModule } from './public-receipts/public-receipts.module';
@@ -55,6 +56,7 @@ const featureModules = [
   PairingCodesModule,
   PairingRequestsModule,
   PaymentsModule,
+  ModifiersModule,
   TransactionsModule,
   ReportsModule,
   PublicReceiptsModule,

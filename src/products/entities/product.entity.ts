@@ -10,9 +10,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BeforeInsert,
+  OneToMany,
 } from 'typeorm';
 import { nanoid10 } from '../../utils/nanoid';
 import { Category } from '../../category/entities/category.entity';
+import { ProductModifierGroup } from '../../modifiers/entities/product-modifier-group.entity';
 
 @Entity()
 export class Product {
@@ -54,6 +56,9 @@ export class Product {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @OneToMany(() => ProductModifierGroup, (link) => link.product)
+  productModifierGroups: ProductModifierGroup[];
 
   @CreateDateColumn()
   createdAt: Date;

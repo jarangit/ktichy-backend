@@ -12,6 +12,7 @@ import {
 import { Order } from './order.entity';
 import { Product } from '../../products/entities/product.entity';
 import { OrderStationItem } from '../../order-station-item/entities/order-station-item.entity';
+import { OrderItemModifier } from './order-item-modifier.entity';
 import { nanoid10 } from '../../utils/nanoid';
 
 @Entity()
@@ -34,6 +35,12 @@ export class OrderItem {
     onDelete: 'CASCADE',
   })
   stationItems: OrderStationItem[];
+
+  @OneToMany(() => OrderItemModifier, (modifier) => modifier.orderItem, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  modifiers: OrderItemModifier[];
 
   @ManyToOne(() => Order, (order) => order.items, {
     onDelete: 'CASCADE',

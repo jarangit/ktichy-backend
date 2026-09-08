@@ -14,6 +14,7 @@ import { User } from '../../users/entities/user.entity';
 import { Order } from '../../orders/entities/order.entity';
 import { nanoid10 } from '../../utils/nanoid';
 import { Category } from '../../category/entities/category.entity';
+import { ModifierGroup } from '../../modifiers/entities/modifier-group.entity';
 import { Product } from '../../products/entities/product.entity';
 import { Exclude } from 'class-transformer';
 
@@ -53,6 +54,9 @@ export class Store {
 
   @OneToMany(() => Product, (product) => product.store)
   products: Product[];
+
+  @OneToMany(() => ModifierGroup, (group) => group.store)
+  modifierGroups: ModifierGroup[];
 
   @CreateDateColumn()
   createdAt: Date;

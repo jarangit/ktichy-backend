@@ -12,6 +12,16 @@ import {
 import { Type } from 'class-transformer';
 import { OrderType } from '../entities/order.entity';
 
+export class CreateOrderModifierSelectionDto {
+  @IsString()
+  @IsNotEmpty()
+  modifierGroupId: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  modifierOptionIds: string[];
+}
+
 export class CreateOrderProductDto {
   @IsString()
   @IsNotEmpty()
@@ -25,6 +35,12 @@ export class CreateOrderProductDto {
   @IsOptional()
   @IsString()
   note?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderModifierSelectionDto)
+  modifiers?: CreateOrderModifierSelectionDto[];
 }
 
 export class CreateOrderDto {

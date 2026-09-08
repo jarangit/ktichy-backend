@@ -10,8 +10,10 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { OrderItemModifier } from './entities/order-item-modifier.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
 import { Store } from '../stores/entities/store.entity';
+import { ModifierSelectionService } from '../modifiers/modifier-selection.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 @Injectable()
@@ -29,6 +31,11 @@ export class OrdersService {
     @InjectRepository(OrderStationItem)
     private readonly orderStationItemRepository: Repository<OrderStationItem>,
 
+    @InjectRepository(OrderItemModifier)
+    private readonly orderItemModifierRepository: Repository<OrderItemModifier>,
+
+    private readonly modifierSelectionService: ModifierSelectionService,
+
     private readonly realtimeGateway: RealtimeGateway,
   ) {}
 
@@ -43,15 +50,29 @@ export class OrdersService {
         throw new BadRequestException('Product ID and quantity are required');
       }
 
-      // Find product with station relation
+      // Find product with station + modifier configuration
       const product = await this.productRepository.findOne({
         where: { id: item.productId },
-        relations: ['station'],
+        relations: [
+          'station',
+          'productModifierGroups',
+          'productModifierGroups.modifierGroup',
+          'productModifierGroups.modifierGroup.options',
+        ],
       });
 
       if (!product) {
         throw new NotFoundException(`Product #${item.productId} not found`);
       }
+
+      // Validate modifier selections server-side and price the item as
+      // base price + sum(option price adjustments). Never trust client totals.
+      const selection = this.modifierSelectionService.validateAndCalculate(
+        product as Parameters<
+          ModifierSelectionService['validateAndCalculate']
+        >[0],
+        item.modifiers ?? [],
+      );
 
       // Create order item with price/name snapshot (keeps history stable
       // even if the product price or name changes later)
@@ -59,8 +80,11 @@ export class OrdersService {
         product,
         quantity: item.quantity,
         notes: item.note,
-        price: product.price,
+        price: selection.finalUnitPrice,
         name: product.name,
+        modifiers: selection.selections.map((snapshot) =>
+          this.orderItemModifierRepository.create({ ...snapshot }),
+        ),
       });
 
       // Create station item for this order item
@@ -138,7 +162,7 @@ export class OrdersService {
   async findOne(id: string): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['store', 'items', 'items.product'],
+      relations: ['store', 'items', 'items.product', 'items.modifiers'],
     });
 
     if (!order) {
@@ -239,7 +263,7 @@ export class OrdersService {
   async findByStationId(stationId: string): Promise<Order[]> {
     const orders = await this.orderRepository.find({
       where: { items: { stationItems: { station: { id: stationId } } } },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'items.modifiers'],
     });
 
     if (!orders.length) {

@@ -12,3 +12,5 @@
 - `N:1 -> Store, Station?, Category?`
 - ลบ Category = SET NULL; ลบ Store/Station = cascade
 - `isActive` ปิดขายโดยไม่ลบ
+- `1:N -> ProductModifierGroup` — ดู `docs/features/modifiers.md`
+- `GET /products/:id` คืน `modifierGroups` (เฉพาะ active groups + available options)

@@ -35,7 +35,7 @@ export class ProductService {
   ) {}
 
   /** Flatten a loaded Product into the shape the POS/settings UI expects. */
-  private toView(product: Product) {
+  private toView(product: Product, includeModifiers = false) {
     return {
       id: product.id,
       name: product.name,
@@ -51,7 +51,43 @@ export class ProductService {
       stationName: product.station?.name ?? null,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
+      ...(includeModifiers
+        ? { modifierGroups: this.toModifierGroupsView(product) }
+        : {}),
     };
+  }
+
+  /** POS-facing modifier configuration: active groups + available options only. */
+  private toModifierGroupsView(product: Product) {
+    const links = (
+      (product as { productModifierGroups?: any[] }).productModifierGroups ?? []
+    )
+      .slice()
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    return links
+      .map((link) => link.modifierGroup)
+      .filter((group) => group && group.isActive)
+      .map((group) => ({
+        id: group.id,
+        name: group.name,
+        selectionType: group.selectionType,
+        minSelect: group.minSelect,
+        maxSelect: group.maxSelect,
+        sortOrder:
+          links.find((l) => l.modifierGroup?.id === group.id)?.sortOrder ?? 0,
+        options: (group.options ?? [])
+          .filter((option: any) => option.isAvailable)
+          .slice()
+          .sort((a: any, b: any) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          .map((option: any) => ({
+            id: option.id,
+            name: option.name,
+            priceAdjustment: Number(option.priceAdjustment ?? 0),
+            sortOrder: option.sortOrder,
+            isAvailable: option.isAvailable,
+          })),
+      }));
   }
 
   private async findByIdWithRelations(id: string) {
@@ -188,8 +224,19 @@ export class ProductService {
   }
 
   async findOne(id: string) {
-    const product = await this.findByIdWithRelations(id);
-    return this.toView(product);
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: {
+        ...this.productRelations,
+        productModifierGroups: {
+          modifierGroup: { options: true },
+        },
+      },
+    });
+    if (!product) {
+      throw new NotFoundException(`Product #${id} not found`);
+    }
+    return this.toView(product, true);
   }
 
   async update(id: string, updateProductDto: UpdateProductDto, userId: string) {
