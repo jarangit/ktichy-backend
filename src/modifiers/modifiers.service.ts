@@ -180,12 +180,13 @@ export class ModifiersService {
     return this.toGroupView(await this.findGroupWithRelations(id));
   }
 
-  async deactivateGroup(id: string, userId: string) {
+  async deleteGroup(id: string, userId: string) {
     const group = await this.findGroupWithRelations(id);
     this.assertGroupOwner(group, userId);
-    group.isActive = false;
-    await this.groupRepository.save(group);
-    return { message: `Modifier group #${id} has been deactivated` };
+    // Options and product links are removed by ON DELETE CASCADE.
+    // Order history keeps its own snapshot, so it is unaffected.
+    await this.groupRepository.remove(group);
+    return { message: `Modifier group #${id} has been deleted` };
   }
 
   async createOption(
@@ -247,10 +248,28 @@ export class ModifiersService {
     return this.toOptionView(loaded!);
   }
 
-  async deactivateOption(id: string, userId: string) {
-    return this.updateOption(id, { isAvailable: false }, userId).then(() => ({
-      message: `Modifier option #${id} has been deactivated`,
-    }));
+  async deleteOption(id: string, userId: string) {
+    const option = await this.optionRepository.findOne({
+      where: { id },
+      relations: { modifierGroup: { store: true, options: true } },
+    });
+    if (!option)
+      throw new NotFoundException(`Modifier option #${id} not found`);
+    this.assertGroupOwner(option.modifierGroup, userId);
+
+    if (option.isAvailable) {
+      const activeCount = (option.modifierGroup.options ?? []).filter(
+        (o) => o.isAvailable && o.id !== option.id,
+      ).length;
+      if (activeCount < option.modifierGroup.minSelect) {
+        throw new BadRequestException(
+          `Cannot delete option: group requires at least ${option.modifierGroup.minSelect} active option(s)`,
+        );
+      }
+    }
+
+    await this.optionRepository.remove(option);
+    return { message: `Modifier option #${id} has been deleted` };
   }
 
   async assignGroupToProduct(

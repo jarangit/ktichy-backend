@@ -48,8 +48,8 @@ export class ModifiersController {
   }
 
   @Delete('modifier-groups/:id')
-  deactivateGroup(@Param('id') id: string, @Req() req: any) {
-    return this.modifiersService.deactivateGroup(id, req.user?.sub);
+  deleteGroup(@Param('id') id: string, @Req() req: any) {
+    return this.modifiersService.deleteGroup(id, req.user?.sub);
   }
 
   @Post('modifier-groups/:groupId/options')
@@ -71,8 +71,8 @@ export class ModifiersController {
   }
 
   @Delete('modifier-options/:id')
-  deactivateOption(@Param('id') id: string, @Req() req: any) {
-    return this.modifiersService.deactivateOption(id, req.user?.sub);
+  deleteOption(@Param('id') id: string, @Req() req: any) {
+    return this.modifiersService.deleteOption(id, req.user?.sub);
   }
 
   @Post('products/:productId/modifier-groups')
