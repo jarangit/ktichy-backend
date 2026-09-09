@@ -23,6 +23,23 @@ export class PaymentsService {
     private readonly orderRepository: Repository<Order>,
   ) {}
 
+  private toCents(value: number): number {
+    return Math.round(Number(value) * 100);
+  }
+
+  private calculateOrderTotal(order: Order): number {
+    const items = order.items ?? [];
+    if (!items.length) {
+      throw new BadRequestException(
+        `Order #${order.id} has no items to pay for`,
+      );
+    }
+    return items.reduce(
+      (sum, item) => sum + Number(item.price ?? 0) * (item.quantity ?? 0),
+      0,
+    );
+  }
+
   private createReceiptToken(): string {
     return `rcpt_${randomBytes(24).toString('base64url')}`;
   }
@@ -62,19 +79,45 @@ export class PaymentsService {
       throw new BadRequestException(`Order #${orderId} has already been paid`);
     }
 
+    // Backend-owned total: never trust the client amount.
+    // OrderItem.price is already the final unit price snapshot
+    // (base price + modifier adjustments) at order time.
+    const expectedAmount = this.calculateOrderTotal(order);
+
+    if (
+      createPaymentDto.amount !== undefined &&
+      this.toCents(createPaymentDto.amount) !== this.toCents(expectedAmount)
+    ) {
+      throw new BadRequestException(
+        `Payment amount ${createPaymentDto.amount} does not match order total ${expectedAmount}`,
+      );
+    }
+
     const isCash = createPaymentDto.method === PaymentMethod.CASH;
+    if (isCash && createPaymentDto.receivedAmount === undefined) {
+      throw new BadRequestException(
+        'receivedAmount is required for CASH payments',
+      );
+    }
+    if (
+      isCash &&
+      this.toCents(createPaymentDto.receivedAmount ?? 0) <
+        this.toCents(expectedAmount)
+    ) {
+      throw new BadRequestException(
+        'receivedAmount must be greater than or equal to order total',
+      );
+    }
+
     const change = isCash
-      ? Math.max(
-          0,
-          (createPaymentDto.receivedAmount ?? 0) - createPaymentDto.amount,
-        )
+      ? (createPaymentDto.receivedAmount ?? 0) - expectedAmount
       : 0;
 
     const payment = this.paymentRepository.create({
       order,
       store: order.store,
       method: createPaymentDto.method,
-      amount: createPaymentDto.amount,
+      amount: expectedAmount,
       receivedAmount: isCash ? (createPaymentDto.receivedAmount ?? null) : null,
       change: isCash ? change : 0,
       receiptId: order.orderNumber,

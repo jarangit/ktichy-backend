@@ -64,6 +64,7 @@ describe('PaymentsService', () => {
         id: 'o1',
         orderNumber: 'A-001',
         store: { id: 's1' },
+        items: [{ price: 500, quantity: 1 }],
       });
       paymentRepositoryMock.findOne.mockResolvedValue(null);
       paymentRepositoryMock.create.mockImplementation((p) => p);
@@ -79,6 +80,7 @@ describe('PaymentsService', () => {
       });
 
       expect(result.payment.receiptId).toBe('A-001');
+      expect(result.payment.amount).toBe(500);
       expect(result.payment.change).toBe(500);
       expect(result.payment.receivedAmount).toBe(1000);
       expect(result.payment.store).toEqual({ id: 's1' });
@@ -89,6 +91,7 @@ describe('PaymentsService', () => {
         id: 'o1',
         orderNumber: 'A-002',
         store: { id: 's1' },
+        items: [{ price: 300, quantity: 1 }],
       });
       paymentRepositoryMock.findOne.mockResolvedValue(null);
       paymentRepositoryMock.create.mockImplementation((p) => p);
@@ -105,6 +108,87 @@ describe('PaymentsService', () => {
       expect(result.payment.change).toBe(0);
       expect(result.payment.receivedAmount).toBeNull();
       expect(result.payment.method).toBe(PaymentMethod.QR);
+    });
+
+    it('should use the backend-computed total when amount is omitted', async () => {
+      orderRepositoryMock.findOne.mockResolvedValue({
+        id: 'o1',
+        orderNumber: 'A-003',
+        store: { id: 's1' },
+        items: [
+          { price: 80, quantity: 2 },
+          { price: 50, quantity: 1 },
+        ],
+      });
+      paymentRepositoryMock.findOne.mockResolvedValue(null);
+      paymentRepositoryMock.create.mockImplementation((p) => p);
+      paymentRepositoryMock.save.mockImplementation(async (p) => ({
+        id: 'pay3',
+        ...p,
+      }));
+
+      const result = await service.pay('o1', { method: PaymentMethod.QR });
+
+      expect(result.payment.amount).toBe(210);
+    });
+
+    it('should reject when the client amount does not match the order total', async () => {
+      orderRepositoryMock.findOne.mockResolvedValue({
+        id: 'o1',
+        orderNumber: 'A-004',
+        store: { id: 's1' },
+        items: [{ price: 300, quantity: 1 }],
+      });
+      paymentRepositoryMock.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.pay('o1', { method: PaymentMethod.QR, amount: 100 }),
+      ).rejects.toThrow('does not match order total');
+    });
+
+    it('should reject CASH without receivedAmount', async () => {
+      orderRepositoryMock.findOne.mockResolvedValue({
+        id: 'o1',
+        orderNumber: 'A-005',
+        store: { id: 's1' },
+        items: [{ price: 200, quantity: 1 }],
+      });
+      paymentRepositoryMock.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.pay('o1', { method: PaymentMethod.CASH }),
+      ).rejects.toThrow('receivedAmount is required');
+    });
+
+    it('should reject CASH when receivedAmount is less than the order total', async () => {
+      orderRepositoryMock.findOne.mockResolvedValue({
+        id: 'o1',
+        orderNumber: 'A-006',
+        store: { id: 's1' },
+        items: [{ price: 200, quantity: 1 }],
+      });
+      paymentRepositoryMock.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.pay('o1', {
+          method: PaymentMethod.CASH,
+          receivedAmount: 100,
+        }),
+      ).rejects.toThrow('greater than or equal to order total');
+    });
+
+    it('should reject when the order has no items', async () => {
+      orderRepositoryMock.findOne.mockResolvedValue({
+        id: 'o1',
+        orderNumber: 'A-007',
+        store: { id: 's1' },
+        items: [],
+      });
+      paymentRepositoryMock.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.pay('o1', { method: PaymentMethod.QR }),
+      ).rejects.toThrow('has no items');
     });
   });
 });

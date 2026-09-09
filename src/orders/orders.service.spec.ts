@@ -4,7 +4,9 @@ import { OrdersService } from './orders.service';
 import { Order } from './entities/order.entity';
 import { Product } from '../products/entities/product.entity';
 import { OrderItem } from './entities/order-item.entity';
+import { OrderItemModifier } from './entities/order-item-modifier.entity';
 import { OrderStationItem } from '../order-station-item/entities/order-station-item.entity';
+import { ModifierSelectionService } from '../modifiers/modifier-selection.service';
 import { RealtimeGateway } from '../realtime/realtime.gateway';
 
 describe('OrdersService', () => {
@@ -28,6 +30,14 @@ describe('OrdersService', () => {
         },
         {
           provide: getRepositoryToken(OrderStationItem),
+          useValue: {},
+        },
+        {
+          provide: getRepositoryToken(OrderItemModifier),
+          useValue: {},
+        },
+        {
+          provide: ModifierSelectionService,
           useValue: {},
         },
         {
