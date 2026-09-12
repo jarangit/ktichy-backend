@@ -87,7 +87,7 @@ UserIdentity = stub ยังไม่ใช้
 - Field (option): `id, name, priceAdjustment(decimal), sortOrder, isAvailable`
 - Field (junction): `id, sortOrder`, unique `(productId, modifierGroupId)`
 - Relation: `Store 1:N ModifierGroup 1:N ModifierOption`, `Product 1:N ProductModifierGroup N:1 ModifierGroup`
-- Rule: reuse ได้เฉพาะใน store เดียวกัน, DELETE = soft deactivate, `GET /products/:id` คืนเฉพาะ active/available
+- Rule: reuse ได้เฉพาะใน store เดียวกัน, DELETE = soft deactivate, product detail/list endpoints คืนเฉพาะ active/available ใน `modifierGroups`
 - Note: Order snapshot เก็บใน `order_item_modifier`; `POST /orders` รับ `products[].modifiers[]` แล้ว
 
 ### Order — ออเดอร์หนึ่งใบ

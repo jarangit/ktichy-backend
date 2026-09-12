@@ -131,7 +131,7 @@ SINGLE | MULTIPLE
 | --------- | -------- | -------- | -------------- |
 | `storeId` | `string` | ✅       | ไม่ส่ง = `400` |
 
-> คืนทั้ง active และ inactive (หน้า admin ต้องเห็นของที่ปิดเพื่อเปิดกลับ) — หน้า POS ไม่ใช้เส้นนี้ ให้ใช้ `GET /products/:id` แทน
+> คืนทั้ง active และ inactive (หน้า admin ต้องเห็นของที่ปิดเพื่อเปิดกลับ) — หน้า POS ไม่ใช้เส้นนี้ ให้ใช้ `GET /products/store/:storeId` หรือ `GET /products/:id` แทน
 
 **Success Response** `200 OK` — array ของ group shape เดียวกับข้อ 2 (พร้อม `options[]`)
 
@@ -409,16 +409,16 @@ SINGLE | MULTIPLE
 
 ---
 
-## 12. GET /products/:id — Product Detail (เปลี่ยน response: เพิ่ม `modifierGroups`)
+## 12. Product List/Detail — เพิ่ม `modifierGroups`
 
 **Endpoint**
 
 - Method: `GET`
-- URL: `/api/v1/products/:id`
+- URLs: `/api/v1/products/:id`, `/api/v1/products/store/:storeId`, `/api/v1/products/restaurant/:restaurantId`, `/api/v1/products/category/:id`
 - Auth: `none` (เหมือนเดิม)
 - Service: `src/products/products.service.ts:226`
 
-**สิ่งที่เปลี่ยน**: เพิ่ม field `modifierGroups` ท้าย response — fields เดิมทุกตัวอยู่ครบ ไม่เปลี่ยนชื่อ/ลบอะไร
+**สิ่งที่เปลี่ยน**: Product detail และ product list เพิ่ม field `modifierGroups` ท้าย product object — fields เดิมทุกตัวอยู่ครบ ไม่เปลี่ยนชื่อ/ลบอะไร
 
 ```json
 {
@@ -496,7 +496,7 @@ SINGLE | MULTIPLE
 Field notes:
 
 - response นี้ filter ให้แล้ว: group ที่ `isActive=false` และ option ที่ `isAvailable=false` จะไม่ปรากฏ — FE เอาไป render ขายได้เลยไม่ต้อง filter เอง
-- product ไม่มี modifier = `"modifierGroups": []` (ไม่ใช่ `null`)
+- product ไม่มี modifier = `"modifierGroups": []` (ไม่ใช่ `null`) ทั้งใน list และ detail
 - `sortOrder` ของ group = ลำดับแสดงผลบน POS, `sortOrder` ของ option = ลำดับใน group
 - ราคาต่อหน่วยที่ FE ใช้ preview: `price + Σ priceAdjustment` ของ option ที่เลือก
 
@@ -539,10 +539,10 @@ Field notes:
 - [ ] หน้า admin: handle `409` ตอน assign ซ้ำ (แสดง "ผูกแล้ว" แทน error แดง)
 - [ ] หน้า admin: ปุ่มปิด option ต้อง handle `400 minSelect` (บอก user ว่าเหลือขั้นต่ำกี่ตัว)
 - [ ] หน้า POS: `SINGLE` → radio, `MULTIPLE` → checkbox จำกัด `minSelect`–`maxSelect`
-- [ ] หน้า POS: ดึง modifiers จาก `GET /products/:id` ครั้งเดียวตอนเปิดหน้า product — ไม่ต้องยิง API modifier เพิ่ม
+- [ ] หน้า POS: ใช้ `GET /products/store/:storeId` เพื่อโหลด products + modifiers ทั้งร้านใน call เดียว หรือใช้ `GET /products/:id` เมื่อเปิด detail เฉพาะสินค้า
 - [ ] หน้า POS: ราคา preview = `price + Σ priceAdjustment` (ระวังทศนิยม — `priceAdjustment` เป็น decimal)
 - [ ] หน้า POS: อย่าใช้ `GET /modifier-groups` (เส้น admin เห็นของที่ปิดด้วย)
-- [ ] list product ทั้งร้านใช้ endpoint เดิม (`/products/store/:storeId`) — ไม่มี `modifierGroups` ใน list เพื่อ performance
+- [ ] product list ทั้งร้าน (`/products/store/:storeId`) มี `modifierGroups` แล้ว ถ้าไม่มี modifier จะเป็น `[]`
 
 ---
 
@@ -591,12 +591,12 @@ export type ProductModifierGroupView = {
   }[];
 };
 
-// GET /products/:id — เพิ่ม field นี้ต่อท้าย ProductView เดิม
-export type ProductDetailView = ProductView & {
+// Product list/detail responses add this field to each ProductView.
+export type ProductWithModifiersView = ProductView & {
   modifierGroups: ProductModifierGroupView[];
 };
 
-// Local state หน้า POS (รอ Order phase)
+// Selection payload used by POS and order creation.
 export type ModifierSelection = {
   modifierGroupId: string;
   modifierOptionIds: string[];
@@ -653,11 +653,12 @@ await fetch(`${BASE}/products/prod000001/modifier-groups`, {
   body: JSON.stringify({ modifierGroupId: group.data.id, sortOrder: 1 }),
 });
 
-// POS: ดึง detail ครั้งเดียว (public, ไม่ต้องใช้ token)
-const product: { data: ProductDetailView } = await (
-  await fetch(`${BASE}/products/prod000001`)
+// POS: ดึง products + modifiers ทั้งร้านใน call เดียว (public, ไม่ต้องใช้ token)
+const products: { data: ProductWithModifiersView[] } = await (
+  await fetch(`${BASE}/products/store/store00001`)
 ).json();
-const preview = calcUnitPrice(product.data.price, product.data.modifierGroups, [
+const product = products.data.find((p) => p.id === 'prod000001')!;
+const preview = calcUnitPrice(product.price, product.modifierGroups, [
   { modifierGroupId: 'mg00000001', modifierOptionIds: ['mo00000003'] },
 ]); // 60 + 20 = 80
 ```
@@ -674,5 +675,6 @@ curl "http://localhost:3000/api/v1/modifier-groups?storeId=store00001" \
 curl -X POST http://localhost:3000/api/v1/products/prod000001/modifier-groups \
   -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
   -d '{"modifierGroupId":"mg00000001","sortOrder":1}'
+curl http://localhost:3000/api/v1/products/store/store00001
 curl http://localhost:3000/api/v1/products/prod000001
 ```

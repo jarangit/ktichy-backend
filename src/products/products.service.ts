@@ -28,6 +28,13 @@ export class ProductService {
     category: true,
   } as const;
 
+  private readonly productRelationsWithModifiers = {
+    ...this.productRelations,
+    productModifierGroups: {
+      modifierGroup: { options: true },
+    },
+  } as const;
+
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
@@ -218,20 +225,15 @@ export class ProductService {
   async findByCategoryId(categoryId: string) {
     const products = await this.productRepository.find({
       where: { category: { id: categoryId } },
-      relations: this.productRelations,
+      relations: this.productRelationsWithModifiers,
     });
-    return products.map((product) => this.toView(product));
+    return products.map((product) => this.toView(product, true));
   }
 
   async findOne(id: string) {
     const product = await this.productRepository.findOne({
       where: { id },
-      relations: {
-        ...this.productRelations,
-        productModifierGroups: {
-          modifierGroup: { options: true },
-        },
-      },
+      relations: this.productRelationsWithModifiers,
     });
     if (!product) {
       throw new NotFoundException(`Product #${id} not found`);
@@ -288,14 +290,14 @@ export class ProductService {
 
     const products = await this.productRepository.find({
       where: { store: { id: normalizedStoreId } },
-      relations: this.productRelations,
+      relations: this.productRelationsWithModifiers,
     });
     if (products.length === 0) {
       throw new NotFoundException(
         `No products found for store #${normalizedStoreId}`,
       );
     }
-    return products.map((product) => this.toView(product));
+    return products.map((product) => this.toView(product, true));
   }
   private async findByIdOrFail<Entity extends ObjectLiteral>(
     target: EntityTarget<Entity>,

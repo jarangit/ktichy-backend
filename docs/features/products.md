@@ -13,4 +13,4 @@
 - ลบ Category = SET NULL; ลบ Store/Station = cascade
 - `isActive` ปิดขายโดยไม่ลบ
 - `1:N -> ProductModifierGroup` — ดู `docs/features/modifiers.md`
-- `GET /products/:id` คืน `modifierGroups` (เฉพาะ active groups + available options)
+- `GET /products/:id`, `GET /products/store/:storeId`, `GET /products/restaurant/:restaurantId`, `GET /products/category/:id` คืน `modifierGroups` (เฉพาะ active groups + available options; ไม่มี = `[]`)

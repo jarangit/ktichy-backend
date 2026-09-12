@@ -32,6 +32,97 @@ describe('ProductsService', () => {
     delete: jest.fn(),
   };
 
+  const productWithModifiers = {
+    id: 'prod-1',
+    name: 'Americano',
+    price: '60.00',
+    cost: null,
+    isBestSeller: false,
+    isActive: true,
+    imageUrl: null,
+    createdAt: new Date('2026-01-01'),
+    updatedAt: new Date('2026-01-01'),
+    store: { id: 'store-1' },
+    station: { id: 'station-1', name: 'Drinks' },
+    category: { id: 'cat-1', name: 'Coffee' },
+    productModifierGroups: [
+      {
+        sortOrder: 2,
+        modifierGroup: {
+          id: 'mg_extra',
+          name: 'Extra',
+          selectionType: 'MULTIPLE',
+          minSelect: 0,
+          maxSelect: 3,
+          isActive: true,
+          options: [
+            {
+              id: 'mo_oat',
+              name: 'Oat Milk',
+              priceAdjustment: '25.00',
+              sortOrder: 2,
+              isAvailable: false,
+            },
+            {
+              id: 'mo_shot',
+              name: 'Extra Shot',
+              priceAdjustment: '20.00',
+              sortOrder: 1,
+              isAvailable: true,
+            },
+          ],
+        },
+      },
+      {
+        sortOrder: 1,
+        modifierGroup: {
+          id: 'mg_size',
+          name: 'Size',
+          selectionType: 'SINGLE',
+          minSelect: 1,
+          maxSelect: 1,
+          isActive: true,
+          options: [
+            {
+              id: 'mo_large',
+              name: 'Large',
+              priceAdjustment: '20.00',
+              sortOrder: 2,
+              isAvailable: true,
+            },
+            {
+              id: 'mo_small',
+              name: 'Small',
+              priceAdjustment: '0.00',
+              sortOrder: 1,
+              isAvailable: true,
+            },
+          ],
+        },
+      },
+      {
+        sortOrder: 3,
+        modifierGroup: {
+          id: 'mg_inactive',
+          name: 'Inactive',
+          selectionType: 'SINGLE',
+          minSelect: 0,
+          maxSelect: 1,
+          isActive: false,
+          options: [
+            {
+              id: 'mo_hidden',
+              name: 'Hidden',
+              priceAdjustment: '99.00',
+              sortOrder: 1,
+              isAvailable: true,
+            },
+          ],
+        },
+      },
+    ],
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -172,7 +263,12 @@ describe('ProductsService', () => {
 
       expect(mockRepo.find).toHaveBeenCalledWith(
         expect.objectContaining({
-          relations: { store: true, station: true, category: true },
+          relations: {
+            store: true,
+            station: true,
+            category: true,
+            productModifierGroups: { modifierGroup: { options: true } },
+          },
         }),
       );
       expect(result[0]).toEqual(
@@ -181,8 +277,59 @@ describe('ProductsService', () => {
           cost: 30,
           categoryName: 'ข้าว',
           stationName: 'ครัว',
+          modifierGroups: [],
         }),
       );
+    });
+
+    it('returns active modifier groups and available options for the store list', async () => {
+      mockRepo.find.mockResolvedValue([productWithModifiers]);
+
+      const result = await service.findByStoreId('store-1');
+
+      expect(result[0].modifierGroups).toEqual([
+        {
+          id: 'mg_size',
+          name: 'Size',
+          selectionType: 'SINGLE',
+          minSelect: 1,
+          maxSelect: 1,
+          sortOrder: 1,
+          options: [
+            {
+              id: 'mo_small',
+              name: 'Small',
+              priceAdjustment: 0,
+              sortOrder: 1,
+              isAvailable: true,
+            },
+            {
+              id: 'mo_large',
+              name: 'Large',
+              priceAdjustment: 20,
+              sortOrder: 2,
+              isAvailable: true,
+            },
+          ],
+        },
+        {
+          id: 'mg_extra',
+          name: 'Extra',
+          selectionType: 'MULTIPLE',
+          minSelect: 0,
+          maxSelect: 3,
+          sortOrder: 2,
+          options: [
+            {
+              id: 'mo_shot',
+              name: 'Extra Shot',
+              priceAdjustment: 20,
+              sortOrder: 1,
+              isAvailable: true,
+            },
+          ],
+        },
+      ]);
     });
 
     it('throws NotFoundException when the store has no products', async () => {
@@ -219,6 +366,35 @@ describe('ProductsService', () => {
           price: 60,
           categoryName: 'ข้าว',
           stationName: 'ครัว',
+          modifierGroups: [],
+        }),
+      );
+    });
+  });
+
+  describe('findByCategoryId', () => {
+    it('returns products with modifier groups for the category list', async () => {
+      mockRepo.find.mockResolvedValue([productWithModifiers]);
+
+      const result = await service.findByCategoryId('cat-1');
+
+      expect(mockRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { category: { id: 'cat-1' } },
+          relations: {
+            store: true,
+            station: true,
+            category: true,
+            productModifierGroups: { modifierGroup: { options: true } },
+          },
+        }),
+      );
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          id: 'prod-1',
+          modifierGroups: expect.arrayContaining([
+            expect.objectContaining({ id: 'mg_size' }),
+          ]),
         }),
       );
     });

@@ -33,7 +33,7 @@ Product 1:N ProductModifierGroup N:1 ModifierGroup
 - ทุก write ต้องเป็น owner ของ store; group กับ product ต้องอยู่ store เดียวกัน
 - ห้ามย้าย group ข้าม store; ห้าม assign group ที่ inactive
 - ห้ามปิด option จน active options เหลือน้อยกว่า `minSelect`
-- `GET /products/:id` คืน `modifierGroups` เฉพาะ active groups + available options (ไม่มี = `[]`)
+- Product detail และ product list endpoints (`GET /products/:id`, `GET /products/store/:storeId`, `GET /products/restaurant/:restaurantId`, `GET /products/category/:id`) คืน `modifierGroups` เฉพาะ active groups + available options (ไม่มี = `[]`)
 - selection validation + คำนวณราคา: `finalUnitPrice = product.price + SUM(priceAdjustment)`
 - `POST /orders` รับ `products[].modifiers[]` แล้ว; `OrderItem.price` คือราคารวม modifier;
   snapshot เก็บใน `order_item_modifier` (`src/orders/entities/order-item-modifier.entity.ts`)
