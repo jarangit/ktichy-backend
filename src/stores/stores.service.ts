@@ -131,7 +131,15 @@ export class StoresService {
         });
       }
 
-      return store;
+      // Expose whether a PIN exists without leaking the hash
+      // (pinHash is select: false on the entity).
+      const hashRow = await this.storeRepository
+        .createQueryBuilder('store')
+        .select('store.pinHash')
+        .where('store.id = :id', { id })
+        .getOne();
+
+      return { ...store, pinSet: Boolean(hashRow?.pinHash) };
     } catch (error) {
       throw new BadRequestException({
         message: 'Something went wrong while fetching store',
