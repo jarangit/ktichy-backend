@@ -13,6 +13,7 @@ import { StoresService } from './stores.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { CreateStorePinDto } from './dto/create-store-pin.dto';
+import { UpdateStorePinDto } from './dto/update-store-pin.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
 @Controller(['stores', 'restaurants'])
@@ -33,6 +34,16 @@ export class StoresController {
     @Req() req: any,
   ) {
     return this.storesService.setPin(id, dto, req.user?.sub);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/pin')
+  updatePin(
+    @Param('id') id: string,
+    @Body() dto: UpdateStorePinDto,
+    @Req() req: any,
+  ) {
+    return this.storesService.updatePin(id, dto, req.user?.sub);
   }
 
   @Get()

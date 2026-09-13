@@ -6,6 +6,7 @@ import {
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
 import { CreateStorePinDto } from './dto/create-store-pin.dto';
+import { UpdateStorePinDto } from './dto/update-store-pin.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Store } from './entities/store.entity';
 import { Repository } from 'typeorm';
@@ -66,6 +67,51 @@ export class StoresService {
     await this.storeRepository.update(storeId, { pinHash } as any);
     const updated = await this.storeRepository.findOne({ where: { id: storeId } });
     return updated;
+  }
+
+  async updatePin(storeId: string, dto: UpdateStorePinDto, userId: string) {
+    const store = await this.storeRepository.findOne({
+      where: { id: storeId, owner_id: userId },
+    });
+    if (!store) {
+      throw new BadRequestException({
+        message: 'Store not found or you are not the owner',
+        errorCode: 'STORE_NOT_FOUND',
+      });
+    }
+
+    const withHash = await this.storeRepository
+      .createQueryBuilder('store')
+      .addSelect('store.pinHash')
+      .where('store.id = :id', { id: storeId })
+      .getOne();
+
+    if (!withHash?.pinHash) {
+      throw new BadRequestException({
+        message: 'Store PIN has not been set',
+        errorCode: 'STORE_PIN_NOT_SET',
+      });
+    }
+
+    const isValid = await bcrypt.compare(dto.currentPin, withHash.pinHash);
+    if (!isValid) {
+      throw new BadRequestException({
+        message: 'Invalid PIN',
+        errorCode: 'INVALID_STORE_PIN',
+      });
+    }
+
+    if (dto.currentPin === dto.newPin) {
+      throw new BadRequestException({
+        message: 'New PIN must be different from current PIN',
+        errorCode: 'STORE_PIN_MUST_BE_DIFFERENT',
+      });
+    }
+
+    const pinHash = await bcrypt.hash(dto.newPin, 10);
+    await this.storeRepository.update(storeId, { pinHash } as any);
+
+    return { message: 'Store PIN updated successfully' };
   }
 
   findAll() {
