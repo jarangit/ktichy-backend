@@ -32,7 +32,13 @@ export class Store {
   @Column({ type: 'json', nullable: true })
   settings: Record<string, unknown> | null;
 
-  @Column({ name: 'pin_hash', type: 'varchar', length: 255, nullable: true, select: false })
+  @Column({
+    name: 'pin_hash',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    select: false,
+  })
   @Exclude()
   pinHash: string | null;
 

@@ -61,8 +61,17 @@ export class OrdersService {
         ],
       });
 
-      if (!product) {
+      if (!product || product.deletedAt) {
         throw new NotFoundException(`Product #${item.productId} not found`);
+      }
+
+      // isActive=false means "temporarily off sale" (still listed in back
+      // office); deleted products are already filtered above. Neither may
+      // be ordered.
+      if (product.isActive === false) {
+        throw new BadRequestException(
+          `Product #${item.productId} is not currently on sale`,
+        );
       }
 
       // Validate modifier selections server-side and price the item as

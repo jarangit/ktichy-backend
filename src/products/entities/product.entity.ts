@@ -9,6 +9,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   BeforeInsert,
   OneToMany,
 } from 'typeorm';
@@ -65,6 +66,11 @@ export class Product {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Soft delete marker (recoverable). NULL = not deleted.
+  // Kept separate from isActive, which only means "on sale / off sale".
+  @DeleteDateColumn({ nullable: true })
+  deletedAt: Date | null;
 
   @BeforeInsert()
   generateId() {

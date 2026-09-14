@@ -65,7 +65,9 @@ export class StoresService {
 
     const pinHash = await bcrypt.hash(dto.pin, 10);
     await this.storeRepository.update(storeId, { pinHash } as any);
-    const updated = await this.storeRepository.findOne({ where: { id: storeId } });
+    const updated = await this.storeRepository.findOne({
+      where: { id: storeId },
+    });
     return updated;
   }
 
@@ -163,7 +165,9 @@ export class StoresService {
     }
 
     // Enforce PIN for all writes (write-before-settings)
-    const { pin, ...payload } = updateStoreDto as UpdateStoreDto & { pin?: string };
+    const { pin, ...payload } = updateStoreDto as UpdateStoreDto & {
+      pin?: string;
+    };
 
     // Fetch pinHash explicitly (select: false on entity)
     const withHash = await this.storeRepository
@@ -195,7 +199,11 @@ export class StoresService {
     }
 
     // Strip pin and disallow owner hijack via payload
-    const { userId: _ignoredUserId, pin: _ignoredPin, ...safePayload } = payload as any;
+    const {
+      userId: _ignoredUserId,
+      pin: _ignoredPin,
+      ...safePayload
+    } = payload as any;
     Object.assign(store, safePayload);
     return await this.storeRepository.save(store);
   }

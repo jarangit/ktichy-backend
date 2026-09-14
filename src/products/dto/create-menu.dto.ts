@@ -39,6 +39,10 @@ export class CreateProductDto {
   @IsBoolean()
   isBestSeller?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
   @ValidateIf((_obj, value) => value !== null)
   @IsOptional()
   @IsString()

@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
   Req,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-menu.dto';
 import { UpdateProductDto } from './dto/update-menu.dto';
+import { GetProductsQueryDto } from './dto/get-products-query.dto';
 import { ProductService } from './products.service';
 import { JwtAuthGuard } from '../auth/jwt-auth-guard';
 
@@ -31,8 +33,11 @@ export class ProductsController {
   }
 
   @Get('category/:id')
-  findByCategoryId(@Param('id') categoryId: string) {
-    return this.productService.findByCategoryId(categoryId);
+  findByCategoryId(
+    @Param('id') categoryId: string,
+    @Query() query: GetProductsQueryDto,
+  ) {
+    return this.productService.findByCategoryId(categoryId, query);
   }
 
   @Get(':id')
@@ -56,13 +61,25 @@ export class ProductsController {
     return this.productService.remove(id, req.user?.sub);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id/restore')
+  restore(@Param('id') id: string, @Req() req: any) {
+    return this.productService.restore(id, req.user?.sub);
+  }
+
   @Get('restaurant/:restaurantId')
-  findByRestaurantId(@Param('restaurantId') restaurantId: string) {
-    return this.productService.findByRestaurantId(restaurantId);
+  findByRestaurantId(
+    @Param('restaurantId') restaurantId: string,
+    @Query() query: GetProductsQueryDto,
+  ) {
+    return this.productService.findByRestaurantId(restaurantId, query);
   }
 
   @Get('store/:storeId')
-  findByStoreId(@Param('storeId') storeId: string) {
-    return this.productService.findByStoreId(storeId);
+  findByStoreId(
+    @Param('storeId') storeId: string,
+    @Query() query: GetProductsQueryDto,
+  ) {
+    return this.productService.findByStoreId(storeId, query);
   }
 }

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-menu.dto';
 import { UpdateProductDto } from './dto/update-menu.dto';
+import { GetProductsQueryDto } from './dto/get-products-query.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EntityTarget,
@@ -58,6 +59,7 @@ export class ProductService {
       stationName: product.station?.name ?? null,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
+      deletedAt: product.deletedAt ?? null,
       ...(includeModifiers
         ? { modifierGroups: this.toModifierGroupsView(product) }
         : {}),
@@ -222,9 +224,12 @@ export class ProductService {
     return `This action returns all products`;
   }
 
-  async findByCategoryId(categoryId: string) {
+  async findByCategoryId(categoryId: string, query?: GetProductsQueryDto) {
     const products = await this.productRepository.find({
-      where: { category: { id: categoryId } },
+      where: {
+        category: { id: categoryId },
+        ...this.bestSellerFilter(query),
+      },
       relations: this.productRelationsWithModifiers,
     });
     return products.map((product) => this.toView(product, true));
@@ -268,36 +273,67 @@ export class ProductService {
   }
 
   async remove(id: string, userId: string) {
-    const product = await this.findOwnedProductWithRelations(id, userId);
-    await this.productRepository.delete(id);
-
-    if (product.imageUrl) {
-      await this.uploadsService.deleteProductImageByUrl(product.imageUrl);
-    }
+    // Soft delete (recoverable): sets deletedAt, keeps the row + image so
+    // order history referencing this product stays intact and it can be
+    // restored later. isActive=false is only "temporarily off sale".
+    await this.findOwnedProductWithRelations(id, userId);
+    await this.productRepository.softDelete(id);
 
     return { message: `Product #${id} has been removed` };
   }
 
-  async findByRestaurantId(restaurantId: string) {
-    return this.findByStoreId(restaurantId);
+  async restore(id: string, userId: string) {
+    const product = await this.productRepository.findOne({
+      where: { id },
+      relations: this.productRelations,
+      withDeleted: true,
+    });
+    if (!product || !product.deletedAt) {
+      throw new NotFoundException(`Deleted product #${id} not found`);
+    }
+    const ownerId = (product.store as { owner_id?: string } | null)?.owner_id;
+    if (!ownerId || ownerId !== userId) {
+      throw new ForbiddenException(
+        `User #${userId} does not have access to product #${id}`,
+      );
+    }
+    await this.productRepository.restore(id);
+    const result = await this.findByIdWithRelations(id);
+    return this.toView(result);
   }
 
-  async findByStoreId(storeId: string) {
+  async findByRestaurantId(restaurantId: string, query?: GetProductsQueryDto) {
+    return this.findByStoreId(restaurantId, query);
+  }
+
+  async findByStoreId(storeId: string, query?: GetProductsQueryDto) {
     const normalizedStoreId = storeId?.trim();
     if (!normalizedStoreId) {
       throw new BadRequestException('storeId is required');
     }
 
     const products = await this.productRepository.find({
-      where: { store: { id: normalizedStoreId } },
+      where: {
+        store: { id: normalizedStoreId },
+        ...this.bestSellerFilter(query),
+      },
       relations: this.productRelationsWithModifiers,
     });
-    if (products.length === 0) {
+    // Unfiltered list keeps the legacy 404 so existing clients are unaffected.
+    // A filtered query (e.g. ?isBestSeller=true) returns [] instead, since
+    // "no best sellers" is a valid result, not a missing resource.
+    if (products.length === 0 && query?.isBestSeller === undefined) {
       throw new NotFoundException(
         `No products found for store #${normalizedStoreId}`,
       );
     }
     return products.map((product) => this.toView(product, true));
+  }
+
+  private bestSellerFilter(query?: GetProductsQueryDto) {
+    return query?.isBestSeller === undefined
+      ? {}
+      : { isBestSeller: query.isBestSeller };
   }
   private async findByIdOrFail<Entity extends ObjectLiteral>(
     target: EntityTarget<Entity>,

@@ -30,6 +30,8 @@ describe('ProductsService', () => {
       ...patch,
     })),
     delete: jest.fn(),
+    softDelete: jest.fn(),
+    restore: jest.fn(),
   };
 
   const productWithModifiers = {
@@ -339,6 +341,29 @@ describe('ProductsService', () => {
         NotFoundException,
       );
     });
+
+    it('filters by isBestSeller when the query is provided', async () => {
+      mockRepo.find.mockResolvedValue([]);
+
+      const result = await service.findByStoreId('store-1', {
+        isBestSeller: true,
+      });
+
+      expect(mockRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { store: { id: 'store-1' }, isBestSeller: true },
+        }),
+      );
+      expect(result).toEqual([]);
+    });
+
+    it('returns an empty list instead of 404 for filtered queries with no matches', async () => {
+      mockRepo.find.mockResolvedValue([]);
+
+      await expect(
+        service.findByStoreId('store-1', { isBestSeller: true }),
+      ).resolves.toEqual([]);
+    });
   });
 
   describe('findOne', () => {
@@ -397,6 +422,21 @@ describe('ProductsService', () => {
           ]),
         }),
       );
+    });
+
+    it('filters by isBestSeller when the query is provided', async () => {
+      mockRepo.find.mockResolvedValue([]);
+
+      const result = await service.findByCategoryId('cat-1', {
+        isBestSeller: false,
+      });
+
+      expect(mockRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { category: { id: 'cat-1' }, isBestSeller: false },
+        }),
+      );
+      expect(result).toEqual([]);
     });
   });
 
@@ -505,20 +545,19 @@ describe('ProductsService', () => {
   });
 
   describe('remove', () => {
-    it('deletes the product image after deleting the product', async () => {
+    it('soft-deletes the product without deleting the image', async () => {
       mockRepo.findOne.mockResolvedValue({
         id: 'prod-1',
         imageUrl: 'https://img',
         store: { id: 'store-1', owner_id: 'user-1' },
       });
-      mockRepo.delete.mockResolvedValue(undefined);
+      mockRepo.softDelete.mockResolvedValue(undefined);
 
       await service.remove('prod-1', 'user-1');
 
-      expect(mockRepo.delete).toHaveBeenCalledWith('prod-1');
-      expect(uploadsService.deleteProductImageByUrl).toHaveBeenCalledWith(
-        'https://img',
-      );
+      expect(mockRepo.softDelete).toHaveBeenCalledWith('prod-1');
+      expect(mockRepo.delete).not.toHaveBeenCalled();
+      expect(uploadsService.deleteProductImageByUrl).not.toHaveBeenCalled();
     });
 
     it('rejects deletes from a non-owner', async () => {
@@ -529,6 +568,52 @@ describe('ProductsService', () => {
 
       await expect(service.remove('prod-1', 'user-1')).rejects.toThrow(
         ForbiddenException,
+      );
+    });
+  });
+
+  describe('restore', () => {
+    it('restores a soft-deleted product for the owner', async () => {
+      const deleted = {
+        id: 'prod-1',
+        deletedAt: new Date('2026-01-02'),
+        store: { id: 'store-1', owner_id: 'user-1' },
+      };
+      const restored = {
+        id: 'prod-1',
+        name: 'ข้าวผัดกุ้ง',
+        price: '60.00',
+        cost: null,
+        isBestSeller: false,
+        isActive: true,
+        imageUrl: 'https://img',
+        deletedAt: null,
+        createdAt: new Date('2026-01-01'),
+        updatedAt: new Date('2026-01-01'),
+        store: { id: 'store-1' },
+        station: { id: 'station-1', name: 'ครัว' },
+        category: null,
+      };
+      mockRepo.findOne
+        .mockResolvedValueOnce(deleted)
+        .mockResolvedValueOnce(restored);
+      mockRepo.restore.mockResolvedValue(undefined);
+
+      const result = await service.restore('prod-1', 'user-1');
+
+      expect(mockRepo.restore).toHaveBeenCalledWith('prod-1');
+      expect(result).toEqual(expect.objectContaining({ id: 'prod-1' }));
+    });
+
+    it('rejects restore when the product is not soft-deleted', async () => {
+      mockRepo.findOne.mockResolvedValue({
+        id: 'prod-1',
+        deletedAt: null,
+        store: { id: 'store-1', owner_id: 'user-1' },
+      });
+
+      await expect(service.restore('prod-1', 'user-1')).rejects.toThrow(
+        NotFoundException,
       );
     });
   });
